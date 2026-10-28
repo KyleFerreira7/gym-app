@@ -16,7 +16,8 @@
     muscles    Muscles worked, MAIN one first. The first one decides where it shows
                in "Browse by muscle" (see data/groupings.js).
     equipment  "machine", "cable", "dumbbell", "mat" or "cardio".
-    type       "reps" (count sets and reps) or "cardio" (a countdown, logged in minutes).
+    type       "reps" (count sets and reps), "cardio" (a countdown, logged in minutes) or
+               "swim" (repeats of a number of pool lengths; equipment "pool").
     metrics    Cardio only: what you can note for it, any of "level", "speed" (km/h),
                "incline" (%) and "distance" (km). Shown as − / + under the timer.
     cue        One short line shown during the workout.
@@ -132,6 +133,101 @@ const EXERCISES = [
     mistakes: [
       "Leaning heavily on the rails.",
       "Only using your toes on each step.",
+    ],
+  },
+
+  // ---------- Swimming ----------
+  {
+    id: "freestyle",
+    name: "Freestyle",
+    muscles: ["cardio", "shoulders", "back"],
+    equipment: "pool",
+    type: "swim",
+    cue: "Long, relaxed strokes. Breathe to the side every 2 or 3 strokes.",
+    howTo: "Float face down with your body long and flat. Reach forward with one arm at a time, " +
+      "pull the water back past your hip, and kick small and steady from the hips. Turn your " +
+      "head to the side to breathe as that arm comes out of the water.",
+    tips: [
+      "Breathe out under water, so you only breathe in when you turn.",
+      "Slow and smooth beats fast and splashy.",
+    ],
+    mistakes: [
+      "Lifting your head forward to breathe, which drops your legs.",
+      "Big kicks from the knees instead of the hips.",
+    ],
+  },
+  {
+    id: "breaststroke",
+    name: "Breaststroke",
+    muscles: ["cardio", "quads", "chest"],
+    equipment: "pool",
+    type: "swim",
+    cue: "Pull, breathe, kick, glide.",
+    howTo: "Start long and flat with your arms in front. Sweep your hands out and round, lifting " +
+      "your head to breathe. Bring your heels towards you, then kick them out and back together " +
+      "as your arms shoot forward. Glide for a moment before the next stroke.",
+    tips: [
+      "The glide is where the speed is: don't rush it.",
+      "A good stroke to rest on between harder lengths.",
+    ],
+    mistakes: [
+      "Keeping your head up the whole time.",
+      "No glide, so every stroke starts from a standstill.",
+    ],
+  },
+  {
+    id: "backstroke",
+    name: "Backstroke",
+    muscles: ["cardio", "back", "shoulders"],
+    equipment: "pool",
+    type: "swim",
+    cue: "Hips up, ears in the water, arms like a windmill.",
+    howTo: "Lie on your back with your ears in the water and your hips high. Kick steadily from " +
+      "the hips. Lift one straight arm over your head, enter the water little finger first, and " +
+      "push the water down towards your feet. Alternate arms.",
+    tips: [
+      "Look straight up, not at your feet.",
+      "Count your strokes from the flags to the wall, so you don't hit your head.",
+    ],
+    mistakes: [
+      "Sitting in the water with your hips low.",
+      "Bending your knees so they come out of the water.",
+    ],
+  },
+  {
+    id: "kickboard-kick",
+    name: "Kick with a board",
+    muscles: ["cardio", "quads", "glutes"],
+    equipment: "pool",
+    type: "swim",
+    cue: "Hold the board, arms straight, kick from the hips.",
+    howTo: "Hold a kickboard at the far end with straight arms and lie flat on the water. Kick " +
+      "with straight-ish legs from the hips, toes pointed, making small splashes at the surface.",
+    tips: [
+      "Point your toes: floppy ankles make it much slower.",
+      "Put your face in the water between breaths to keep your hips up.",
+    ],
+    mistakes: [
+      "Kicking from the knees, like cycling.",
+      "Big splashy kicks that waste energy.",
+    ],
+  },
+  {
+    id: "pull-buoy",
+    name: "Pull with a buoy",
+    muscles: ["cardio", "back", "shoulders"],
+    equipment: "pool",
+    type: "swim",
+    cue: "Buoy between your thighs, arms only, no kicking.",
+    howTo: "Squeeze a pull buoy between your upper thighs so your legs float. Swim freestyle with " +
+      "your arms only, keeping your legs still and your body long.",
+    tips: [
+      "Great for practising your arm stroke and breathing.",
+      "Keep your stomach tight so your hips don't sway.",
+    ],
+    mistakes: [
+      "Kicking anyway, so the buoy slips out.",
+      "Shortening your stroke: reach long and pull all the way back.",
     ],
   },
 

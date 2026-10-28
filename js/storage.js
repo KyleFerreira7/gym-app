@@ -18,6 +18,7 @@
     machineSettings  Your notes per exercise, e.g. { "leg-press": "Seat 5" }
     weightSteps      How much − / + changes the weight, per exercise, e.g. { "leg-press": 5 }
     locations        Where each machine is in my gym, e.g. { "leg-press": "Back left, by the mirrors" }
+    poolLength       Pool length in metres for swimming (25 if not set).
     customWorkouts   Workouts I built myself, same shape as in data/workouts.js
                      (ids start with "my-").
     activePlanId     The plan whose next workout Home suggests (data/plans.js).

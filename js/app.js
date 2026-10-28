@@ -55,6 +55,7 @@ appEl.addEventListener("click", (event) => {
     case "done-set":       return doneSet();
     case "edit-set":       return editSet(Number(el.dataset.set));
     case "cycle-step":     return cycleWeightStep(el.dataset.exercise);
+    case "cycle-pool":     return cyclePoolLength();
     case "adjust":
       // Taps and holds are handled on "pointerdown" below; this is for keyboards.
       if (event.detail === 0) adjustValue(el.dataset.field, Number(el.dataset.dir));

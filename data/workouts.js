@@ -240,6 +240,46 @@ const WORKOUTS = [
     steps: [{ exercise: "treadmill-walk", seconds: 1800 }],
   },
 
+  // ---------- Swimming (draft, to review). For swims, reps = lengths per repeat. ----------
+  {
+    id: "easy-swim",
+    name: "Easy swim",
+    description: "A gentle mix of strokes with short rests. About 20 lengths in a 25 m pool.",
+    tags: ["swim", "beginner"],
+    rest: 30,
+    steps: [
+      { exercise: "breaststroke", sets: 1, reps: [4, 4] },
+      { exercise: "freestyle", sets: 4, reps: [2, 2] },
+      { exercise: "kickboard-kick", sets: 4, reps: [1, 1] },
+      { exercise: "backstroke", sets: 2, reps: [2, 2] },
+    ],
+  },
+  {
+    id: "swim-drills",
+    name: "Technique drills",
+    description: "Legs only, arms only, then put it together. Better strokes, not more lengths.",
+    tags: ["swim"],
+    rest: 30,
+    steps: [
+      { exercise: "breaststroke", sets: 1, reps: [2, 2] },
+      { exercise: "kickboard-kick", sets: 4, reps: [1, 1] },
+      { exercise: "pull-buoy", sets: 4, reps: [1, 1] },
+      { exercise: "freestyle", sets: 4, reps: [1, 1] },
+      { exercise: "backstroke", sets: 2, reps: [1, 1] },
+    ],
+  },
+  {
+    id: "steady-swim",
+    name: "Steady 20 lengths",
+    description: "Five repeats of four lengths of freestyle. 500 m in a 25 m pool.",
+    tags: ["swim"],
+    rest: 45,
+    steps: [
+      { exercise: "breaststroke", sets: 1, reps: [2, 2] },
+      { exercise: "freestyle", sets: 5, reps: [4, 4] },
+    ],
+  },
+
   // ---------- Mat only ----------
   {
     id: "core-mat",

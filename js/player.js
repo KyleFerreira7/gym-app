@@ -80,7 +80,7 @@ function stepFinished(step) {
 // (e.g. 12 on all 3 sets of 8–12), it's time for one weight step more.
 // Only for exercises with a weight, and only when you did all the sets.
 function readyToGoUp(sets, step, exercise) {
-  if (step.seconds || exercise.equipment === "mat") return false;
+  if (step.seconds || !usesWeight(exercise)) return false;
   if (sets.length < step.sets) return false;
   return sets.every((s) => s.weightKg != null && s.reps >= step.reps[1]);
 }
@@ -96,7 +96,27 @@ const DEFAULT_STEP = { machine: 5, cable: 2.5, dumbbell: 2 };
 const DEFAULT_START = { machine: 20, cable: 10, dumbbell: 4 };
 
 function usesWeight(ex) {
-  return ex.equipment !== "mat"; // mat exercises: reps only
+  return ex.equipment !== "mat" && ex.type !== "swim"; // mat and pool: reps (or lengths) only
+}
+
+// ---------- Swimming ----------
+// A swim step is repeats of a number of pool lengths: in data/workouts.js `sets` is the
+// number of repeats and `reps` the lengths in each. Saved sets also keep the pool length
+// (poolM), so distance is right even if you swim in a different pool later.
+const POOL_LENGTHS = [25, 50, 20, 33];
+
+function isSwim(ex) {
+  return ex.type === "swim";
+}
+
+function poolLength() {
+  return DB.poolLength || 25;
+}
+
+function cyclePoolLength() {
+  DB.poolLength = POOL_LENGTHS[(POOL_LENGTHS.indexOf(poolLength()) + 1) % POOL_LENGTHS.length];
+  saveDB();
+  renderPlayer(true);
 }
 
 function weightStep(ex) {
@@ -220,7 +240,7 @@ function renderPlayer(keepScroll = false) {
         <button class="swap-btn" data-action="swap" aria-label="Swap this exercise">
           ${icon("swap")} ${step.swappedFrom
             ? `Swapped from ${esc(getExercise(step.swappedFrom).name)} · change`
-            : "Machine taken? Swap"}
+            : isSwim(ex) ? "Swap stroke" : "Machine taken? Swap"}
         </button>`}
       ${body}
     </section>
@@ -238,12 +258,20 @@ function setsBlock(step, ex) {
   const n = currentSetNumber(step);
   const usesSettings = ex.equipment === "machine" || ex.equipment === "cable";
 
+  const swim = isSwim(ex);
+  const unit = swim ? "lengths" : "reps";
+
   // "Last time (Mon 26 Oct): 40 kg × 12 · 40 kg × 11"
-  let lastLine = "First time: the weight is a light guess. Use − and + until it feels right.";
+  let lastLine = swim
+    ? "First time: take it easy, and rest at the wall whenever you need to."
+    : "First time: the weight is a light guess. Use − and + until it feels right.";
   if (last) {
-    const sets = last.sets
-      .map((s) => (s.weightKg != null ? `${s.weightKg} kg × ${s.reps}` : `${s.reps} reps`))
-      .join(" · ");
+    // Swims: "4 × 2 lengths (200 m)" when every repeat was the same.
+    const sameSwim = swim && last.sets.every((s) => s.reps === last.sets[0].reps);
+    const sets = sameSwim
+      ? `${last.sets.length} × ${last.sets[0].reps} length${last.sets[0].reps === 1 ? "" : "s"} ` +
+        `(${last.sets.reduce((sum, s) => sum + s.reps * (s.poolM || 25), 0)} m)`
+      : last.sets.map(setText).join(" · ");
     lastLine = `<strong>Last time</strong> (${formatDate(last.date)}): ${sets}`;
   }
 
@@ -253,7 +281,7 @@ function setsBlock(step, ex) {
     card = `
       <div class="set-card all-done">
         ${icon("circle-check")}
-        <p><strong>All ${step.sets} sets done.</strong> Tap ${icon("check")} below for the next exercise.</p>
+        <p><strong>All ${step.sets} ${swim ? "repeats" : "sets"} done.</strong> Tap ${icon("check")} below for the next exercise.</p>
       </div>`;
   } else {
     const draft = draftFor(step, ex, n);
@@ -266,10 +294,14 @@ function setsBlock(step, ex) {
     }
     card = `
       <div class="set-card">
-        <p class="eyebrow">Set ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
+        <p class="eyebrow">${swim ? "Repeat" : "Set"} ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
         ${note}
         ${usesWeight(ex) ? stepper("weight", draft.weight, "kg", n) : ""}
-        ${stepper("reps", draft.reps, "reps", n)}
+        ${stepper("reps", draft.reps, unit, n)}
+        ${swim ? `
+          <button class="step-size" data-action="cycle-pool">
+            ${esc(draft.reps)} × ${poolLength()} m = <strong>${(parseInt(draft.reps, 10) || 0) * poolLength()} m</strong>
+            · pool ${poolLength()} m · change</button>` : ""}
         ${usesWeight(ex) ? `
           <button class="step-size" data-action="cycle-step" data-exercise="${ex.id}">
             − / + changes the weight by <strong>${weightStep(ex)} kg</strong> · change</button>` : ""}
@@ -285,11 +317,11 @@ function setsBlock(step, ex) {
   for (let s = 1; s <= step.sets; s++) {
     const logged = done.find((log) => log.set === s);
     if (logged) {
-      const label = logged.weightKg != null ? `${logged.weightKg}×${logged.reps}` : `${logged.reps} reps`;
+      const label = logged.weightKg != null ? `${logged.weightKg}×${logged.reps}` : `${logged.reps} ${unit}`;
       chips.push(`<button class="chip-set done" data-action="edit-set" data-set="${s}"
         aria-label="Set ${s}: ${label}. Tap to change">${icon("check")} ${label}</button>`);
     } else {
-      chips.push(`<span class="chip-set ${s === n ? "current" : ""}">Set ${s}</span>`);
+      chips.push(`<span class="chip-set ${s === n ? "current" : ""}">${swim ? "Repeat" : "Set"} ${s}</span>`);
     }
   }
 
@@ -460,7 +492,8 @@ function controlDock(step, isLast) {
       ${icon(cur.timer.endsAt ? "pause" : "play")}</button>`;
   } else if (!stepFinished(step)) {
     // The main button while lifting: save this set (with the numbers on screen).
-    middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} Done set</button>`;
+    const label = isSwim(getExercise(step.exercise)) ? "Done repeat" : "Done set";
+    middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} ${label}</button>`;
   } else {
     // All sets done → a green tick that moves on.
     middle = `<button class="round-btn big go" data-action="next"
@@ -633,6 +666,7 @@ function doneSet() {
     exerciseId: step.exercise, set: n,
     weightKg: Number.isFinite(weight) ? weight : null,
     reps, seconds: null, date: todayISO(), at: Date.now(),
+    ...(isSwim(ex) ? { poolM: poolLength() } : {}),
   });
   delete cur.drafts[`${cur.step}-${n}`];
   startRest(step);
@@ -689,6 +723,8 @@ function adjustValue(field, dir) {
     input.value = draft[field];
     input.classList.remove("needs-value");
   }
+  const pool = document.querySelector('[data-action="cycle-pool"] strong');
+  if (pool && field === "reps") pool.textContent = `${draft.reps * poolLength()} m`;
 }
 
 // Swap the exercise on screen for another one, for this workout only.
@@ -784,6 +820,7 @@ function renderDone(session) {
   const minutes = Math.max(1, Math.round((Date.now() - session.startedAt) / 60000));
   const kg = repLogs.reduce((sum, log) => sum + (log.weightKg || 0) * log.reps, 0);
   const cardioMin = Math.round(logs.filter((l) => l.seconds).reduce((sum, l) => sum + l.seconds, 0) / 60);
+  const swimM = logs.filter((l) => l.poolM).reduce((sum, l) => sum + l.reps * l.poolM, 0);
   const steps = workout.steps.map((_, i) => stepAt(workout, i, session.swaps || {}));
 
   // Exercises where today's sets all hit the top of the range: go up next time.
@@ -805,11 +842,13 @@ function renderDone(session) {
       <div class="stat-grid">
         <div class="stat"><span class="eyebrow">Time</span><strong>${minutes} min</strong></div>
         ${repLogs.length || !cardioMin
-          ? `<div class="stat"><span class="eyebrow">Sets</span><strong>${repLogs.length}</strong></div>`
+          ? `<div class="stat"><span class="eyebrow">${swimM && !kg ? "Repeats" : "Sets"}</span><strong>${repLogs.length}</strong></div>`
           : `<div class="stat"><span class="eyebrow">Exercises</span><strong>${new Set(logs.map((l) => l.exerciseId)).size}</strong></div>`}
-        ${kg > 0 || !cardioMin
+        ${kg > 0 || (!cardioMin && !swimM)
           ? `<div class="stat"><span class="eyebrow">Lifted</span><strong>${Math.round(kg)} kg</strong></div>`
-          : `<div class="stat"><span class="eyebrow">Cardio</span><strong>${cardioMin} min</strong></div>`}
+          : swimM
+            ? `<div class="stat"><span class="eyebrow">Swum</span><strong>${swimM} m</strong></div>`
+            : `<div class="stat"><span class="eyebrow">Cardio</span><strong>${cardioMin} min</strong></div>`}
       </div>
       ${goUp.length ? `
         <div class="nudge done-nudge">

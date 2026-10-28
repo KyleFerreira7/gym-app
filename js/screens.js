@@ -91,6 +91,9 @@ function targetText(step) {
   if (step.seconds) return formatDuration(step.seconds);
   const [min, max] = step.reps;
   const reps = min === max ? `${min}` : `${min}–${max}`;
+  if (getExercise(step.exercise).type === "swim") {
+    return `${step.sets} × ${reps} length${max === 1 ? "" : "s"}`;
+  }
   return `${step.sets} × ${reps}${step.eachSide ? " each side" : ""}`;
 }
 
@@ -129,6 +132,8 @@ function formatDate(iso) {
 
 // Which group of MUSCLE_GROUPS an exercise belongs to (by its main muscle).
 function inMuscleGroup(exercise, group) {
+  if (group.equipment) return exercise.equipment === group.equipment;
+  if (exercise.equipment === "pool") return false; // swims only show under Swimming
   return group.muscles.includes(exercise.muscles?.[0]);
 }
 

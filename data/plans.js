@@ -45,4 +45,5 @@ const FEATURED = [
   { workout: "core-mat", label: "Mat only" },
   { workout: "cardio-mix", label: "Cardio" },
   { workout: "incline-walk", label: "Cardio" },
+  { workout: "easy-swim", label: "Pool" },
 ];
