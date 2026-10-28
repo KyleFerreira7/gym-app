@@ -65,6 +65,15 @@ function stepFinished(step) {
   return setsDone(step) >= step.sets;
 }
 
+// The plan's progression rule: if you hit the TOP of the rep range on every set
+// (e.g. 12 on all 3 sets of 8–12), it's time for one weight step more.
+// Only for exercises with a weight, and only when you did all the sets.
+function readyToGoUp(sets, step, exercise) {
+  if (step.seconds || exercise.equipment === "mat") return false;
+  if (sets.length < step.sets) return false;
+  return sets.every((s) => s.weightKg != null && s.reps >= step.reps[1]);
+}
+
 // Milliseconds left on a countdown that may be running or paused.
 function msLeft(clock) {
   return clock.endsAt ? clock.endsAt - Date.now() : clock.remainingMs;
@@ -192,7 +201,16 @@ function setsBlock(step, ex) {
       </div>`;
   }
 
+  // "Go up" nudge: last time you hit the top of the range on every set.
+  const nudge = last && readyToGoUp(last.sets, step, ex) ? `
+    <div class="nudge">
+      ${icon("trending-up")}
+      <p><strong>Time to go up.</strong> Last time you hit ${step.reps[1]} on every set
+      at ${Math.max(...last.sets.map((s) => s.weightKg))} kg. Try one weight step more today.</p>
+    </div>` : "";
+
   return `
+    ${nudge}
     <p class="last-time">${lastLine}</p>
     ${settings}
     <div class="sets">${warmUp}${rows}</div>`;
@@ -467,6 +485,11 @@ function renderDone(session) {
   const minutes = Math.max(1, Math.round((Date.now() - session.startedAt) / 60000));
   const kg = repLogs.reduce((sum, log) => sum + (log.weightKg || 0) * log.reps, 0);
 
+  // Exercises where today's sets all hit the top of the range: go up next time.
+  const goUp = workout.steps
+    .filter((step) => readyToGoUp(logs.filter((l) => l.exerciseId === step.exercise), step, getExercise(step.exercise)))
+    .map((step) => getExercise(step.exercise).name);
+
   // Exercises with nothing ticked count as skipped.
   const skipped = workout.steps
     .filter((step) => !logs.some((log) => log.exerciseId === step.exercise))
@@ -483,6 +506,11 @@ function renderDone(session) {
         <div class="stat"><span class="eyebrow">Sets</span><strong>${repLogs.length}</strong></div>
         <div class="stat"><span class="eyebrow">Lifted</span><strong>${Math.round(kg)} kg</strong></div>
       </div>
+      ${goUp.length ? `
+        <div class="nudge done-nudge">
+          ${icon("trending-up")}
+          <p><strong>Go up next time:</strong> ${goUp.map(esc).join(", ")}</p>
+        </div>` : ""}
       ${skipped.length ? `<p class="muted skipped">Skipped: ${skipped.map(esc).join(", ")}</p>` : ""}
     </section>
     <div class="bottom-bar">
