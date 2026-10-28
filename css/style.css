@@ -914,3 +914,21 @@ body.flash::after {
 @media (prefers-reduced-motion: reduce) {
   .info-art-wrap.moving .info-art.end { animation: none; }
 }
+
+/* ---------- Very narrow screens (old small iPhones, or "Zoomed" display mode) ---------- */
+@media (max-width: 360px) {
+  :root { --gutter: 14px; }
+  .stepper { gap: 6px; }
+  .step-btn { width: 50px; height: 50px; font-size: 26px; }
+  .step-value input { font-size: 32px; width: 3em; }
+  .step-value span { width: 2.4em; font-size: 14px; }
+  .controls { gap: 10px; }
+  .round-btn { width: 48px; height: 48px; }
+  .done-set-btn { min-width: 0; height: 56px; padding: 0 18px; font-size: 17px; }
+  .rest-row { flex-wrap: wrap; row-gap: 6px; }
+  .rest-buttons { gap: 4px; }
+  .small-btn { min-width: 44px; padding: 0 8px; font-size: 14px; }
+  .set-timer-row .row-sub { display: none; }
+  .tab-bar { max-width: calc(100% - 20px); }
+  .tab { padding: 0 10px; gap: 4px; font-size: 14px; }
+}
