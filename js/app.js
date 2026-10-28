@@ -59,10 +59,20 @@ appEl.addEventListener("input", (event) => {
 // The clock that keeps timers moving on screen.
 setInterval(tickClock, 250);
 
-// When the phone wakes up or you switch back to the app, catch up straight away.
+// When the phone wakes up or you switch back to the app, catch up straight away
+// (and ask again to keep the screen on, since the phone drops that when you leave).
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) tickClock();
+  if (document.hidden) return;
+  tickClock();
+  if (DB.current) keepScreenAwake();
 });
+
+// Offline: register the service worker (sw.js), which saves the app's files on the phone.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch((error) => {
+    console.error("Offline mode not available", error);
+  });
+}
 
 // Start: carry on with a workout in progress, otherwise show Home.
 if (DB.current && getWorkout(DB.current.workoutId)) {

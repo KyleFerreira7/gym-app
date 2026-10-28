@@ -102,6 +102,7 @@ function renderPlayer(keepScroll = false) {
     cur.timer = { remainingMs: step.seconds * 1000, endsAt: null, done: false };
   }
   const body = step.seconds ? timedBlock() : setsBlock(step, ex);
+  keepScreenAwake(); // no dimming mid-workout
 
   showScreen(`
     <header class="topbar">
@@ -479,6 +480,7 @@ function quitWorkout() {
 // ---------- Done ----------
 
 function renderDone(session) {
+  letScreenSleep();
   const workout = getWorkout(session.workoutId);
   const logs = DB.logs.filter((log) => log.sessionId === session.sessionId);
   const repLogs = logs.filter((log) => log.reps);

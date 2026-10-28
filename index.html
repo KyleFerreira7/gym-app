@@ -4,8 +4,21 @@
   <meta charset="utf-8">
   <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch). -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f6f4ef">
+  <!-- Colour of the phone's status bar area, light and dark. -->
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151714" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
   <title>Gym</title>
+
+  <!-- Installing to the home screen: the app's name, icon and full-screen mode. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icons/icon-180.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Gym">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -20,6 +33,7 @@
   <script src="js/icons.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/sound.js"></script>
+  <script src="js/wakelock.js"></script>
   <script src="js/screens.js"></script>
   <script src="js/player.js"></script>
   <script src="js/app.js"></script>

@@ -1,7 +1,8 @@
 /*
   STYLES
   All colours and sizes are variables here at the top. Change one value and it
-  changes everywhere; dark mode later = a second set of these values.
+  changes everywhere. Dark mode is a second set of colour values, used
+  automatically when the phone is set to dark.
 */
 
 :root {
@@ -19,8 +20,29 @@
   --radius: 22px;
   --radius-small: 14px;
   --shadow: 0 8px 30px rgba(40, 35, 20, 0.08);
+  --shadow-up: 0 -10px 40px rgba(40, 35, 20, 0.12); /* the dock while resting */
   --tap: 52px;            /* minimum height of anything you tap */
   --gutter: 20px;
+}
+
+/* Dark mode: same names, darker values. The phone's setting decides which is used. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151714;
+    --surface: #222520;
+    --text: #ecebe6;
+    --muted: #9a968c;
+    --line: #353930;
+    --accent: #5fae86;      /* a lighter green, so it stands out on dark */
+    --accent-text: #0f1a14;
+    --accent-soft: #1f3328;
+    --warning: #e07a52;
+    --rest: #d9a441;
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    --shadow-up: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  }
+  /* The light "no picture yet" placeholder would glare on a dark screen. */
+  img[src$="placeholder.svg"] { opacity: 0.3; }
 }
 
 * { box-sizing: border-box; }
@@ -475,7 +497,7 @@ body.flash::after {
 .dock.with-rest {
   background: var(--surface);
   border-radius: 28px 28px 0 0;
-  box-shadow: 0 -10px 40px rgba(40, 35, 20, 0.12);
+  box-shadow: var(--shadow-up);
   padding-top: 16px;
 }
 .controls { display: flex; align-items: center; justify-content: center; gap: 28px; }

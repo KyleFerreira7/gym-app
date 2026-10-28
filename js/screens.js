@@ -35,6 +35,7 @@ function goBack() {
 }
 
 function goHome() {
+  letScreenSleep();
   screenStack.length = 0;
   screenStack.push([renderHome, []]);
   renderHome();
