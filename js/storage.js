@@ -26,6 +26,8 @@
                      Saved after every change, so a locked phone loses nothing.
 */
 
+// The name the data is saved under. It's from before the app was called Rep; it stays
+// as it is, because changing it would make the app forget everything already saved.
 const STORAGE_KEY = "gym-app";
 
 function emptyDB() {

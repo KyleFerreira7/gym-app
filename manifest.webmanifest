@@ -1,6 +1,6 @@
 {
-  "name": "Gym",
-  "short_name": "Gym",
+  "name": "Rep",
+  "short_name": "Rep",
   "description": "Pick a workout and follow it, one exercise at a time.",
   "start_url": "./",
   "scope": "./",

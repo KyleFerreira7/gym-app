@@ -2,7 +2,7 @@
   ME: a summary of your saved data, plus backup.
 
   Your data lives only in this browser on this device. "Back up my data" saves
-  all of it to a file (gym-backup-YYYY-MM-DD.json) that you keep somewhere safe
+  all of it to a file (rep-backup-YYYY-MM-DD.json) that you keep somewhere safe
   (iCloud Drive, email it to yourself...). "Load a backup" reads such a file back.
   "Clean up" deletes history (Start fresh) or everything (Delete everything).
 
@@ -102,17 +102,17 @@ function deleteEverything() {
 
 async function exportData() {
   const backup = {
-    app: "gym-app",
+    app: "rep",
     exportedAt: new Date().toISOString(),
     data: { ...DB, current: null }, // a workout in progress isn't worth saving
   };
-  const name = `gym-backup-${todayISO()}.json`;
+  const name = `rep-backup-${todayISO()}.json`;
   const file = new File([JSON.stringify(backup, null, 2)], name, { type: "application/json" });
 
   try {
     if (navigator.maxTouchPoints > 0 && navigator.canShare?.({ files: [file] })) {
       // Phones: open the share sheet ("Save to Files", AirDrop, Mail...).
-      await navigator.share({ files: [file], title: "Gym backup" });
+      await navigator.share({ files: [file], title: "Rep backup" });
     } else {
       // Computers: a normal download to the Downloads folder.
       const link = document.createElement("a");
@@ -141,7 +141,8 @@ async function importData(file) {
   } catch (error) {
     return renderMe("That file isn't a backup from this app.");
   }
-  if (backup?.app !== "gym-app" || !Array.isArray(backup.data?.logs)) {
+  // "gym-app" is what backups were called before the app was named Rep.
+  if (!["rep", "gym-app"].includes(backup?.app) || !Array.isArray(backup.data?.logs)) {
     return renderMe("That file isn't a backup from this app.");
   }
 

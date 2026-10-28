@@ -16,7 +16,7 @@
   shows up straight away on a normal reload.
 */
 
-const CACHE = "gym-app-v2"; // change this name to throw away all saved copies
+const CACHE = "rep-v3"; // change this name to throw away all saved copies
 const WAIT_MS = 3000;
 
 // The app's own files.
