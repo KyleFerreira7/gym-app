@@ -9,7 +9,8 @@
       timer,        timed exercise: { remainingMs, endsAt (null when paused), done }
       rest,         rest countdown: { endsAt (null when paused), remainingMs, totalMs,
                                       advance, nextLabel } or null
-      swaps }       exercises swapped for this workout only: { stepIndex: exerciseId }
+      swaps,        exercises swapped for this workout only: { stepIndex: exerciseId }
+      setTimer }    the set you're doing right now: { startedAt, totalMs } or null
 
   Timers store the moment they END (a timestamp), not a count. So if the phone
   locks for a minute, the countdown is still right when you come back.
@@ -32,6 +33,7 @@ function startWorkout(workoutId) {
     timer: null,
     rest: null,
     swaps: {},
+    setTimer: null,
   };
   saveDB();
   renderPlayer();
@@ -166,6 +168,9 @@ function msLeft(clock) {
 function ringFraction(step) {
   const cur = DB.current;
   if (cur.rest) return Math.max(0, msLeft(cur.rest) / cur.rest.totalMs);
+  if (cur.setTimer) {
+    return Math.max(0, (cur.setTimer.startedAt + cur.setTimer.totalMs - Date.now()) / cur.setTimer.totalMs);
+  }
   if (step.seconds) {
     if (!cur.timer || cur.timer.done) return 1;
     return Math.max(0, msLeft(cur.timer) / (step.seconds * 1000));
@@ -351,8 +356,11 @@ function controlDock(step, isLast) {
   } else if (step.seconds && !cur.timer.done) {
     middle = `<button class="round-btn big" data-action="toggle-timer" aria-label="${cur.timer.endsAt ? "Pause" : "Start"}">
       ${icon(cur.timer.endsAt ? "pause" : "play")}</button>`;
+  } else if (!stepFinished(step) && !cur.setTimer) {
+    // Ready for a set: start its clock.
+    middle = `<button class="done-set-btn" data-action="start-set">${icon("play")} Start set</button>`;
   } else if (!stepFinished(step)) {
-    // The main button while lifting: save this set (with the numbers on screen).
+    // During a set: save it (with the numbers on screen).
     middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} Done set</button>`;
   } else {
     // All sets done → a green tick that moves on.
@@ -375,9 +383,19 @@ function controlDock(step, isLast) {
       </div>
     </div>` : "";
 
+  const n = currentSetNumber(step);
+  const setRow = !rest && cur.setTimer && n !== null ? `
+    <div class="rest-row set-timer-row">
+      <div>
+        <p class="eyebrow">Set ${n} of ${step.sets}</p>
+        <p class="rest-clock" data-countdown="set">${setClockText(cur.setTimer)}</p>
+      </div>
+      <p class="row-sub">About ${Math.round(cur.setTimer.totalMs / 1000)} s.<br>Tap Done set when you finish.</p>
+    </div>` : "";
+
   return `
-    <nav class="dock ${rest ? "with-rest" : ""}">
-      ${restRow}
+    <nav class="dock ${rest || setRow ? "with-rest" : ""}">
+      ${restRow}${setRow}
       <div class="controls">
         <button class="round-btn" data-action="prev" ${cur.step === 0 ? "disabled" : ""} aria-label="Previous exercise">
           ${icon("skip-back")}</button>
@@ -386,6 +404,30 @@ function controlDock(step, isLast) {
           ${icon(isLast ? "flag" : "skip-forward")}</button>
       </div>
     </nav>`;
+}
+
+// ---------- The set timer: a countdown for the set you're doing ----------
+// Like the rest timer, it gives each set a running clock. Its length is the set's
+// expected time: SECONDS_PER_REP for each rep (twice for "each side" exercises).
+// Going over is fine: it then counts on quietly ("+0:05").
+const SECONDS_PER_REP = 4;
+
+function expectedSetMs(step, ex, n) {
+  const reps = parseInt(draftFor(step, ex, n).reps, 10) || step.reps[1];
+  return reps * SECONDS_PER_REP * (step.eachSide ? 2 : 1) * 1000;
+}
+
+function startSetTimer() {
+  const step = currentStep();
+  const n = currentSetNumber(step);
+  if (n === null || step.seconds) return;
+  DB.current.setTimer = { startedAt: Date.now(), totalMs: expectedSetMs(step, getExercise(step.exercise), n) };
+}
+
+// "0:31" while there's time left, "+0:05" once you're over.
+function setClockText(timer) {
+  const left = timer.startedAt + timer.totalMs - Date.now();
+  return left >= 0 ? formatClock(left / 1000) : `+${formatClock(-left / 1000)}`;
 }
 
 // ---------- Rest between sets ----------
@@ -417,6 +459,7 @@ function endRest() {
   if (rest.advance) {
     goToStep(+1);
   } else {
+    startSetTimer(); // rest's over: go
     saveDB();
     renderPlayer(true);
   }
@@ -478,6 +521,14 @@ function tickClock() {
     if (el) el.textContent = formatClock(left / 1000);
   }
 
+  if (cur.setTimer) {
+    const el = document.querySelector('[data-countdown="set"]');
+    if (el) {
+      el.textContent = setClockText(cur.setTimer);
+      el.classList.toggle("over", cur.setTimer.startedAt + cur.setTimer.totalMs < Date.now());
+    }
+  }
+
   const ring = document.querySelector("[data-ring]");
   if (ring) ring.style.strokeDashoffset = 100 - ringFraction(step) * 100;
 }
@@ -519,7 +570,10 @@ function doneSet() {
     exerciseId: step.exercise, set: n,
     weightKg: Number.isFinite(weight) ? weight : null,
     reps, seconds: null, date: todayISO(), at: Date.now(),
+    // How long the set took (from Start set), for later stats.
+    ...(cur.setTimer ? { setSeconds: Math.round((Date.now() - cur.setTimer.startedAt) / 1000) } : {}),
   });
+  cur.setTimer = null;
   delete cur.drafts[`${cur.step}-${n}`];
   startRest(step);
   saveDB();
@@ -537,6 +591,7 @@ function editSet(setNumber) {
   DB.logs = DB.logs.filter((log) => log !== logged);
   cur.drafts[`${cur.step}-${setNumber}`] = { weight: logged.weightKg, reps: logged.reps };
   cur.rest = null;
+  cur.setTimer = null;
   saveDB();
   renderPlayer(true);
 }
@@ -571,6 +626,7 @@ function adjustValue(field, dir) {
 function swapExercise(exerciseId) {
   const cur = DB.current;
   cur.swaps = cur.swaps || {}; // workouts started before swapping existed
+  cur.setTimer = null;
   const original = getWorkout(cur.workoutId).steps[cur.step].exercise;
   if (exerciseId === original) delete cur.swaps[cur.step];
   else cur.swaps[cur.step] = exerciseId;
@@ -624,6 +680,7 @@ function goToStep(delta) {
 
   cur.step = target;
   cur.rest = null;
+  cur.setTimer = null;
   cur.timer = null; // a fresh timer for the new step...
   const step = stepAt(workout, target, cur.swaps);
   if (step.seconds && setsDone(step) > 0) {

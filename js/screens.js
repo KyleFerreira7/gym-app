@@ -242,8 +242,14 @@ function showInfo(exerciseId) {
       · done ${history.length}×</p>`;
   }
 
+  // Start and end positions: if there's an end picture (img/exercises/<id>-end.jpg),
+  // the two fade into each other on a loop, like a slow video. If not, just the one.
   openSheet(ex.name, `
-    ${exerciseImage(ex.id, "info-art")}
+    <div class="info-art-wrap">
+      ${exerciseImage(ex.id, "info-art")}
+      <img class="info-art end" src="img/exercises/${ex.id}-end.jpg" alt=""
+        onload="this.parentElement.classList.add('moving')" onerror="this.remove()">
+    </div>
     <p class="cue">${esc(ex.cue)}</p>
     ${best}
     ${muscles ? `<div class="muscle-row">${muscles}</div>` : ""}
@@ -325,14 +331,15 @@ function renderHome() {
   const weekday = now.toLocaleDateString("en-GB", { weekday: "long" });
   const plan = activePlan();
   const nextId = nextWorkoutId();
-  const last = lastSession();
 
-  // The swipe row: your plan's workouts (starting with the suggested one), then
-  // your own workouts, then the featured ones (data/plans.js), then "build your own".
+  // The swipe row: Push, Pull, Legs (starting with the one that's up next), then
+  // Workout A and B, your own workouts, the featured ones (data/plans.js), then
+  // "build your own".
   const start = plan.workouts.indexOf(nextId);
   const planIds = [...plan.workouts.slice(start), ...plan.workouts.slice(0, start)];
   const row = [
     ...planIds.map((id) => ({ id, label: id === nextId ? "Up next" : plan.name })),
+    ...HOME_ALSO.map((id) => ({ id, label: "Full body" })),
     ...DB.customWorkouts.map((w) => ({ id: w.id, label: "My workout" })),
     ...FEATURED.map((f) => ({ id: f.workout, label: f.label })),
   ];
@@ -356,13 +363,6 @@ function renderHome() {
       <span class="row-sub">Pick exercises, sets and reps. Saved under My workouts.</span>
     </button>`;
 
-  const planCards = PLANS.map((p) => `
-    <button class="plan-card ${p.id === plan.id ? "active" : ""}" data-action="open-plan" data-id="${p.id}">
-      <span class="eyebrow">${p.id === plan.id ? `${icon("check")} Following` : `${p.workouts.length} workouts`}</span>
-      <span class="plan-name">${esc(p.name)}</span>
-      <span class="row-sub">${p.workouts.map((id) => esc(getWorkout(id).name)).join(" · ")}</span>
-    </button>`).join("");
-
   const muscleTiles = MUSCLE_GROUPS
     .filter((g) => exercisesInGroup(g).length > 0)
     .map((g) => tile("open-muscle", g.id, g.image, g.name)).join("");
@@ -383,15 +383,6 @@ function renderHome() {
     </header>
 
     <section class="carousel">${cards}</section>
-
-    <p class="muted center last-line">
-      ${last
-        ? `${icon("history")} Last workout: ${esc(getWorkout(last.workoutId)?.name ?? last.workoutName ?? "Workout")}, ${formatDate(last.date)}`
-        : "Your first workout. You've got this."}
-    </p>
-
-    <h2 class="section-title">Plans</h2>
-    <section class="plan-row">${planCards}</section>
 
     <h2 class="section-title">My workouts</h2>
     ${DB.customWorkouts.length
@@ -481,7 +472,6 @@ function renderType(typeId) {
 
 function renderDetail(workoutId) {
   const workout = getWorkout(workoutId);
-  const plans = PLANS.filter((p) => p.workouts.includes(workout.id)).map((p) => p.name);
 
   const rows = workout.steps.map((step) => {
     const ex = getExercise(step.exercise);
@@ -506,7 +496,6 @@ function renderDetail(workoutId) {
     <section class="detail-intro">
       <p class="eyebrow center">${workout.steps.length} exercises · About ${estimateMinutes(workout)} min</p>
       <p class="center">${esc(workout.description)}</p>
-      ${plans.length ? `<p class="center row-sub">Part of: ${plans.map(esc).join(", ")}</p>` : ""}
     </section>
 
     <ul class="step-list">${rows}</ul>

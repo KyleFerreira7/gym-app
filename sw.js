@@ -47,7 +47,8 @@ const APP_FILES = [
 
 // Load the exercise list so we know which pictures to save.
 importScripts("data/exercises.js");
-const PICTURES = EXERCISES.map((ex) => `img/exercises/${ex.id}.jpg`);
+// Start pictures, plus end-position pictures where they exist (missing ones are skipped).
+const PICTURES = EXERCISES.flatMap((ex) => [`img/exercises/${ex.id}.jpg`, `img/exercises/${ex.id}-end.jpg`]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

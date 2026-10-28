@@ -52,6 +52,7 @@ appEl.addEventListener("click", (event) => {
     case "prev":           return goToStep(-1);
     case "info":           return showInfo(id);
     case "swap":           return showSwapSheet();
+    case "start-set":      startSetTimer(); saveDB(); return renderPlayer(true);
     case "done-set":       return doneSet();
     case "edit-set":       return editSet(Number(el.dataset.set));
     case "cycle-step":     return cycleWeightStep(el.dataset.exercise);

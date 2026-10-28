@@ -121,8 +121,9 @@ function allWorkouts() {
   return [...WORKOUTS, ...DB.customWorkouts];
 }
 
+// The rotation Home suggests from (HOME_PLAN in data/plans.js; choosing a plan is parked).
 function activePlan() {
-  return PLANS.find((p) => p.id === DB.activePlanId) || PLANS[0];
+  return PLANS.find((p) => p.id === HOME_PLAN) || PLANS[0];
 }
 
 // Which workout to suggest: the one after the last completed workout of your

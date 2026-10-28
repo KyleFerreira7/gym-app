@@ -11,6 +11,12 @@
     workouts   Workout ids from data/workouts.js, in the order they rotate.
 */
 
+// PARKED (2026-10-28): the Plans section is hidden from Home for now. Home always
+// suggests from the rotation below, then shows the workouts in HOME_ALSO.
+// The plan screens still exist in js/screens.js if the section comes back.
+const HOME_PLAN = "push-pull-legs";
+const HOME_ALSO = ["workout-a", "workout-b"];
+
 const PLANS = [
   {
     id: "full-body-ab",

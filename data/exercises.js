@@ -6,6 +6,8 @@
 
   To add an exercise:
     1. Save its illustration as images/exercises/<id>.png
+       (optional: the end position as images/exercises/<id>-end.png; the (i) sheet
+       then fades between the two, like a slow video)
        and run:  python3 tools/resize_images.py
     2. Copy an entry below, paste it at the end of the list, and fill it in.
   No image yet? That's fine: the app shows a placeholder.

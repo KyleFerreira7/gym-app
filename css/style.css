@@ -252,6 +252,11 @@ button:disabled { opacity: 0.35; cursor: default; }
   aspect-ratio: 1;
 }
 .player-art {
+  /* Pinned to fill the frame exactly, so it sits dead centre inside the ring
+     (as an inline image, iPhone Safari placed it a few pixels too high). */
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -889,3 +894,23 @@ body.flash::after {
 .danger-outline { color: var(--warning); border-color: var(--warning); }
 .card .danger-btn { min-height: 44px; }
 .info-panel .danger-btn { margin-top: 18px; }
+
+/* ---------- Set timer (in the dock while you do a set) ---------- */
+.set-timer-row .rest-clock { color: var(--accent); }
+.set-timer-row .rest-clock.over { color: var(--muted); }
+.set-timer-row .row-sub { margin: 0; text-align: right; }
+
+/* ---------- Start → end pictures in the (i) sheet ---------- */
+.info-art-wrap { position: relative; margin-top: 18px; }
+.info-art-wrap .info-art { margin-top: 0; display: block; }
+.info-art.end { position: absolute; inset: 0; opacity: 0; }
+.info-art-wrap.moving .info-art.end { animation: start-to-end 4s ease-in-out infinite; }
+/* Hold the start, fade to the end, hold, fade back. */
+@keyframes start-to-end {
+  0%, 30% { opacity: 0; }
+  45%, 80% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .info-art-wrap.moving .info-art.end { animation: none; }
+}
