@@ -36,6 +36,7 @@ const APP_FILES = [
   "js/screens.js",
   "js/player.js",
   "js/progress.js",
+  "js/builder.js",
   "js/me.js",
   "js/app.js",
   "img/placeholder.svg",

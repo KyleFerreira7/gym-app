@@ -67,7 +67,7 @@ function getExercise(id) {
 }
 
 function getWorkout(id) {
-  return WORKOUTS.find((w) => w.id === id);
+  return allWorkouts().find((w) => w.id === id);
 }
 
 function getPlan(id) {
@@ -140,11 +140,11 @@ function exercisesInGroup(group) {
 // the ones with the most such exercises first (so "Legs" tops the Legs list).
 function workoutsForGroup(group) {
   const count = (w) => w.steps.filter((step) => inMuscleGroup(getExercise(step.exercise), group)).length;
-  return WORKOUTS.filter((w) => count(w) > 0).sort((a, b) => count(b) - count(a));
+  return allWorkouts().filter((w) => count(w) > 0).sort((a, b) => count(b) - count(a));
 }
 
 function workoutsOfType(type) {
-  return WORKOUTS.filter((w) => (w.tags || []).includes(type.id));
+  return allWorkouts().filter((w) => (w.tags || []).includes(type.id));
 }
 
 // A tappable row for a workout, used on the browse screens.
@@ -185,9 +185,10 @@ function tabBar(active) {
 // Used for exercise info (the (i) button) and for swapping an exercise.
 // A sheet sits outside the main screen, so timers carry on underneath and a
 // redraw of the workout (e.g. when rest ends) doesn't close it.
-// onPick(element) is called when something with data-pick="..." is tapped.
+// onPick(element) is called when something with data-pick="..." is tapped; if it
+// returns true the sheet stays open (for picking several). onClose runs on closing.
 
-function openSheet(title, bodyHtml, onPick) {
+function openSheet(title, bodyHtml, onPick, onClose) {
   const sheet = document.createElement("div");
   sheet.className = "info-sheet";
   sheet.innerHTML = `
@@ -204,14 +205,15 @@ function openSheet(title, bodyHtml, onPick) {
   const close = () => {
     sheet.remove();
     document.removeEventListener("keydown", onKey);
+    if (onClose) onClose();
   };
   const onKey = (event) => { if (event.key === "Escape") close(); };
   sheet.addEventListener("click", (event) => {
     if (event.target.closest("[data-close]")) return close();
     const picked = event.target.closest("[data-pick]");
     if (picked && onPick) {
-      close();
-      onPick(picked);
+      const stayOpen = onPick(picked);
+      if (!stayOpen) close();
     }
   });
   document.addEventListener("keydown", onKey);
@@ -302,18 +304,34 @@ function renderHome() {
   const nextId = nextWorkoutId();
   const last = lastSession();
 
-  // The active plan's workouts, starting from the suggested one (swipe sideways).
+  // The swipe row: your plan's workouts (starting with the suggested one), then
+  // your own workouts, then the featured ones (data/plans.js), then "build your own".
   const start = plan.workouts.indexOf(nextId);
-  const ordered = [...plan.workouts.slice(start), ...plan.workouts.slice(0, start)].map(getWorkout);
-
-  const cards = ordered.map((workout) => `
-    <button class="workout-card" data-action="open-workout" data-id="${workout.id}">
-      <span class="eyebrow">${workout.id === nextId ? "Up next · " : ""}About ${estimateMinutes(workout)} min</span>
-      <span class="card-title">${esc(workout.name)}</span>
-      <span class="thumb-grid">
-        ${workout.steps.slice(0, 6).map((step) => exerciseImage(step.exercise, "thumb")).join("")}
-      </span>
-    </button>`).join("");
+  const planIds = [...plan.workouts.slice(start), ...plan.workouts.slice(0, start)];
+  const row = [
+    ...planIds.map((id) => ({ id, label: id === nextId ? "Up next" : plan.name })),
+    ...DB.customWorkouts.map((w) => ({ id: w.id, label: "My workout" })),
+    ...FEATURED.map((f) => ({ id: f.workout, label: f.label })),
+  ];
+  const seen = new Set();
+  const cards = row
+    .filter(({ id }) => getWorkout(id) && !seen.has(id) && seen.add(id))
+    .map(({ id, label }) => {
+      const workout = getWorkout(id);
+      return `
+        <button class="workout-card" data-action="open-workout" data-id="${workout.id}">
+          <span class="eyebrow">${esc(label)} · About ${estimateMinutes(workout)} min</span>
+          <span class="card-title">${esc(workout.name)}</span>
+          <span class="thumb-grid">
+            ${workout.steps.slice(0, 6).map((step) => exerciseImage(step.exercise, "thumb")).join("")}
+          </span>
+        </button>`;
+    }).join("") + `
+    <button class="workout-card create-card" data-action="build">
+      <span class="create-plus">${icon("plus")}</span>
+      <span class="card-title">Build your own</span>
+      <span class="row-sub">Pick exercises, sets and reps. Saved under My workouts.</span>
+    </button>`;
 
   const planCards = PLANS.map((p) => `
     <button class="plan-card ${p.id === plan.id ? "active" : ""}" data-action="open-plan" data-id="${p.id}">
@@ -345,12 +363,18 @@ function renderHome() {
 
     <p class="muted center last-line">
       ${last
-        ? `${icon("history")} Last workout: ${esc(getWorkout(last.workoutId)?.name)}, ${formatDate(last.date)}`
+        ? `${icon("history")} Last workout: ${esc(getWorkout(last.workoutId)?.name ?? last.workoutName ?? "Workout")}, ${formatDate(last.date)}`
         : "Your first workout. You've got this."}
     </p>
 
     <h2 class="section-title">Plans</h2>
     <section class="plan-row">${planCards}</section>
+
+    <h2 class="section-title">My workouts</h2>
+    ${DB.customWorkouts.length
+      ? `<ul class="row-list">${DB.customWorkouts.map(workoutRow).join("")}</ul>`
+      : ""}
+    <button class="secondary-btn wide-btn" data-action="build">${icon("plus")} Build a workout</button>
 
     <h2 class="section-title">Browse by muscle</h2>
     <section class="tile-grid three">${muscleTiles}</section>
@@ -446,7 +470,10 @@ function renderDetail(workoutId) {
   }).join("");
 
   showScreen(`
-    ${topbar(workout.name)}
+    ${workout.custom
+      ? topbar(workout.name).replace('<span class="icon-btn"></span>',
+          `<button class="icon-btn" data-action="edit-workout" data-id="${workout.id}" aria-label="Edit">${icon("pencil")}</button>`)
+      : topbar(workout.name)}
 
     <section class="detail-intro">
       <p class="eyebrow center">${workout.steps.length} exercises · About ${estimateMinutes(workout)} min</p>

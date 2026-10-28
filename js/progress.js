@@ -136,7 +136,7 @@ function renderProgress() {
           <span class="date-badge"><strong>${Number(s.date.slice(8))}</strong>
             ${new Date(s.date + "T12:00").toLocaleDateString("en-GB", { month: "short" })}</span>
           <span class="row-text">
-            <span class="row-title">${esc(getWorkout(s.workoutId)?.name ?? "Workout")}</span>
+            <span class="row-title">${esc(getWorkout(s.workoutId)?.name ?? s.workoutName ?? "Workout")}</span>
             <span class="row-sub">${sets} sets · ${minutes} min${s.completed ? "" : " · ended early"}</span>
           </span>
           ${icon("chevron-right")}
@@ -248,7 +248,7 @@ function showSession(sessionId) {
       </li>`;
   }).join("");
 
-  openSheet(getWorkout(s.workoutId)?.name ?? "Workout", `
+  openSheet(getWorkout(s.workoutId)?.name ?? s.workoutName ?? "Workout", `
     <p class="muted center sheet-intro">${formatDate(s.date)} · ${minutes} min${s.completed ? "" : " · ended early"}</p>
     <div class="sheet-list"><ul class="row-list">${rows || `<li class="muted center">No sets saved.</li>`}</ul></div>`);
 }

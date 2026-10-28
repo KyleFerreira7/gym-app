@@ -121,6 +121,10 @@ async function importData(file) {
   for (const [exerciseId, note] of Object.entries(data.machineSettings || {})) {
     if (!DB.machineSettings[exerciseId]) DB.machineSettings[exerciseId] = note;
   }
+  // My own workouts: add any that aren't here yet.
+  const haveWorkouts = new Set(DB.customWorkouts.map((w) => w.id));
+  DB.customWorkouts.push(...(data.customWorkouts || []).filter((w) => !haveWorkouts.has(w.id)));
+
   for (const [exerciseId, note] of Object.entries(data.locations || {})) {
     if (!DB.locations[exerciseId]) DB.locations[exerciseId] = note;
   }

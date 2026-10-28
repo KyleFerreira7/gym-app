@@ -19,6 +19,7 @@
     type       "reps" (count sets and reps) or "timed" (a countdown).
     cue        One short line shown during the workout.
     howTo      The full instructions (shown when you tap "How to").
+    eachSide   Optional: true if reps are counted per side (used when building a workout).
     swapFor    Optional: exercise ids this one is a good stand-in for, when that
                machine is taken. The swap list shows these first, then other exercises
                for the same main muscle.
@@ -92,6 +93,7 @@ const EXERCISES = [
     muscles: ["core"],
     equipment: "mat",
     type: "reps",
+    eachSide: true,
     cue: "Lower back pressed down. Slow beats fast.",
     howTo: "Lie on your back, arms up, knees bent at 90° above your hips. Press your lower back " +
       "into the mat. Slowly straighten the opposite arm and leg towards the floor, come back, " +
@@ -147,6 +149,7 @@ const EXERCISES = [
     muscles: ["core", "lower back"],
     equipment: "mat",
     type: "reps",
+    eachSide: true,
     cue: "Opposite arm and leg out, hips level, pause.",
     howTo: "On hands and knees. Reach one arm forward and the opposite leg back, keeping your " +
       "hips level, pause, return, swap.",
@@ -233,6 +236,7 @@ const EXERCISES = [
     muscles: ["core"],
     equipment: "mat",
     type: "reps",
+    eachSide: true,
     cue: "Elbow towards the opposite knee, slowly.",
     howTo: "Lie on your back, hands lightly behind your head. Bring one knee in while turning the " +
       "opposite elbow towards it, then swap sides. Move slowly.",

@@ -33,6 +33,11 @@ appEl.addEventListener("click", (event) => {
     case "open-plan":      return goTo(renderPlan, id);
     case "open-muscle":    return goTo(renderMuscle, id);
     case "open-type":      return goTo(renderType, id);
+    case "build":          return startBuilder();
+    case "edit-workout":   return editWorkout(id);
+    case "b-bike": case "b-rest": case "b-sets": case "b-reps": case "b-remove":
+    case "b-move": case "b-add": case "b-save": case "b-delete":
+      return builderAction(el.dataset.action, el);
     case "follow-plan":
       DB.activePlanId = id;
       saveDB();
@@ -68,6 +73,9 @@ appEl.addEventListener("input", (event) => {
 
   if (field === "settings") {
     DB.machineSettings[el.dataset.exercise] = el.value.trim();
+  } else if (field === "builder-name") {
+    builderDraft.name = el.value;
+    return; // saved with the workout, not on every key
   } else if (field === "location") {
     DB.locations[el.dataset.exercise] = el.value.trim();
   } else if (DB.current) {

@@ -10,6 +10,8 @@
     tags       Used by "Browse by type" on Home (see data/groupings.js),
                e.g. "beginner", "short", "machines", "mat".
     rest       Default seconds of rest after each set.
+    easier     Optional: true pre-fills one weight step LESS than last time (and no
+               "go up" nudge), for coming back after a break.
     steps      The exercises, in order.
 
   Step fields:
@@ -126,6 +128,81 @@ const WORKOUTS = [
       { exercise: "leg-curl", sets: 3, reps: [10, 12], warmUp: true },
       { exercise: "leg-extension", sets: 3, reps: [10, 12], warmUp: true },
       { exercise: "glute-bridge", sets: 2, reps: [12, 12] },
+      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
+    ],
+  },
+
+  // ---------- Featured on Home ----------
+  {
+    id: "quick-20",
+    name: "Quick three",
+    description: "Three big machines, two sets each, shorter rests. For a busy day.",
+    tags: ["short", "machines"],
+    rest: 60,
+    steps: [
+      { exercise: "leg-press", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "chest-press", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "lat-pulldown", sets: 2, reps: [10, 12], warmUp: true },
+    ],
+  },
+  {
+    id: "upper-body",
+    name: "Upper body",
+    description: "Chest, back, shoulders and arms. Pushing and pulling, all in one.",
+    tags: ["beginner"],
+    rest: 90,
+    steps: [
+      { exercise: "bike", seconds: 300 },
+      { exercise: "chest-press", sets: 3, reps: [8, 12], warmUp: true },
+      { exercise: "lat-pulldown", sets: 3, reps: [8, 12], warmUp: true },
+      { exercise: "shoulder-press", sets: 2, reps: [8, 12], warmUp: true },
+      { exercise: "seated-row", sets: 2, reps: [8, 12], warmUp: true },
+      { exercise: "triceps-pushdown", sets: 2, reps: [10, 12] },
+      { exercise: "dumbbell-curl", sets: 2, reps: [10, 12] },
+    ],
+  },
+  {
+    id: "back-posture",
+    name: "Back and posture",
+    description: "Rows, pulldowns and the mat work that keeps you standing tall.",
+    tags: ["beginner"],
+    rest: 90,
+    steps: [
+      { exercise: "bike", seconds: 300 },
+      { exercise: "seated-row", sets: 3, reps: [10, 12], warmUp: true },
+      { exercise: "lat-pulldown", sets: 3, reps: [10, 12], warmUp: true },
+      { exercise: "bird-dog", sets: 2, reps: [8, 8], eachSide: true },
+      { exercise: "glute-bridge", sets: 2, reps: [12, 12] },
+      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
+    ],
+  },
+  {
+    id: "busy-gym",
+    name: "Busy gym",
+    description: "No machines needed: one bench, a pair of dumbbells and a mat. No queues.",
+    tags: ["short"],
+    rest: 75,
+    steps: [
+      { exercise: "incline-dumbbell-press", sets: 3, reps: [8, 12], warmUp: true },
+      { exercise: "incline-push-up", sets: 2, reps: [8, 12] },
+      { exercise: "dumbbell-curl", sets: 2, reps: [10, 12] },
+      { exercise: "glute-bridge", sets: 2, reps: [12, 12] },
+      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
+    ],
+  },
+  {
+    id: "first-day-back",
+    name: "First day back",
+    description: "Been away a while? Workout A, two sets each, starting a step lighter " +
+      "than last time. Ease back in.",
+    tags: ["beginner", "short"],
+    rest: 90,
+    easier: true,
+    steps: [
+      { exercise: "bike", seconds: 300 },
+      { exercise: "leg-press", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "chest-press", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "seated-row", sets: 2, reps: [10, 12], warmUp: true },
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },

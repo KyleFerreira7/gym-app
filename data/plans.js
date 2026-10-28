@@ -27,3 +27,20 @@ const PLANS = [
     workouts: ["push", "pull", "legs"],
   },
 ];
+
+/*
+  FEATURED
+  ========
+  The extra cards in the swipe row at the top of Home, after your plan's workouts
+  and your own. Each is a workout id plus a short label shown above its name.
+*/
+
+const FEATURED = [
+  { workout: "quick-20", label: "Quick" },
+  { workout: "upper-body", label: "Focus" },
+  { workout: "back-posture", label: "Focus" },
+  { workout: "busy-gym", label: "Busy gym?" },
+  { workout: "first-day-back", label: "Been away?" },
+  { workout: "lunch-a", label: "Quick" },
+  { workout: "core-mat", label: "Mat only" },
+];

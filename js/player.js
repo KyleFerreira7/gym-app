@@ -42,6 +42,7 @@ function finishWorkout(completed) {
   DB.sessions.push({
     id: cur.sessionId,
     workoutId: cur.workoutId,
+    workoutName: getWorkout(cur.workoutId)?.name,
     date: todayISO(),
     startedAt: cur.startedAt,
     finishedAt: Date.now(),
@@ -125,6 +126,13 @@ function suggestSet(step, ex, n) {
   }
   if (today) {
     return { weight: today.weightKg, reps: lastSame?.reps ?? top };
+  }
+  // "First day back" style workouts: one step lighter than last time, no going up.
+  if (getWorkout(DB.current.workoutId)?.easier && lastSame?.weightKg != null) {
+    return {
+      weight: Math.max(0, roundKg(lastSame.weightKg - weightStep(ex))),
+      reps: lastSame.reps, easierFrom: lastSame.weightKg,
+    };
   }
   if (last && readyToGoUp(last.sets, step, ex)) {
     const heaviest = Math.max(...last.sets.map((s) => s.weightKg));
@@ -249,9 +257,13 @@ function setsBlock(step, ex) {
       </div>`;
   } else {
     const draft = draftFor(step, ex, n);
-    const note = draft.goUpFrom != null && done.length === 0 ? `
-      <p class="set-note">${icon("trending-up")} Up ${roundKg(draft.weight - draft.goUpFrom)} kg from last time:
-        you hit ${step.reps[1]} on every set.</p>` : "";
+    let note = "";
+    if (draft.goUpFrom != null && done.length === 0) {
+      note = `<p class="set-note">${icon("trending-up")} Up ${roundKg(draft.weight - draft.goUpFrom)} kg from last time:
+        you hit ${step.reps[1]} on every set.</p>`;
+    } else if (draft.easierFrom != null && done.length === 0) {
+      note = `<p class="set-note">A step lighter than last time (${draft.easierFrom} kg), to ease back in.</p>`;
+    }
     card = `
       <div class="set-card">
         <p class="eyebrow">Set ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
