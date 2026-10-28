@@ -1,0 +1,9 @@
+# Private notes and reference material: never online.
+_context/
+
+# Original full-size illustrations (the app uses the small copies in img/).
+images/
+
+# Local tool settings and Mac clutter.
+.claude/
+.DS_Store

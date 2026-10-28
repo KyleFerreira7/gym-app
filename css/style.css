@@ -1,0 +1,391 @@
+/*
+  STYLES
+  All colours and sizes are variables here at the top. Change one value and it
+  changes everywhere; dark mode later = a second set of these values.
+*/
+
+:root {
+  --bg: #f6f4ef;          /* page background: warm off-white */
+  --surface: #ffffff;     /* cards, inputs */
+  --text: #22241f;
+  --muted: #8a857a;       /* small labels, secondary text */
+  --line: #e6e2d8;        /* borders and dividers */
+  --accent: #2f6b4f;      /* buttons, ticks: calm deep green */
+  --accent-text: #ffffff;
+  --accent-soft: #e2ede6; /* ticked sets */
+  --warning: #c2572f;
+
+  --radius: 22px;
+  --radius-small: 14px;
+  --shadow: 0 8px 30px rgba(40, 35, 20, 0.08);
+  --tap: 52px;            /* minimum height of anything you tap */
+  --gutter: 20px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  /* Stay clear of the notch and home bar on iPhones. */
+  padding: env(safe-area-inset-top) var(--gutter) calc(110px + env(safe-area-inset-bottom));
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.35; cursor: default; }
+
+.icon { width: 22px; height: 22px; flex-shrink: 0; }
+
+/* ---------- Text styles ---------- */
+
+.eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.big-title { margin: 0; font-size: clamp(30px, 9vw, 40px); line-height: 1.1; letter-spacing: -0.02em; }
+.muted { color: var(--muted); }
+.center { text-align: center; }
+
+/* ---------- Buttons ---------- */
+
+.primary-btn, .secondary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 0 22px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.primary-btn { background: var(--accent); color: var(--accent-text); }
+.secondary-btn { background: var(--surface); border: 1.5px solid var(--line); }
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+/* ---------- Home ---------- */
+
+.home-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 28px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip .icon { color: var(--accent); width: 20px; height: 20px; }
+
+/* Swipe sideways between workouts. scroll-snap makes each card stop in place. */
+.carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 28px var(--gutter) 36px;
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+
+.routine-card {
+  flex: 0 0 86%;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 26px 22px 22px;
+  border-radius: 32px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+.card-title { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+.thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-small);
+  background: var(--line);
+}
+
+.last-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.last-line .icon { width: 18px; height: 18px; }
+
+/* ---------- Top bar (detail and player) ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { margin: 0; font-size: 22px; }
+
+/* ---------- Workout detail ---------- */
+
+.detail-intro {
+  padding: 20px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.detail-intro p { margin: 0 0 8px; }
+
+.step-list { list-style: none; margin: 0; padding: 8px 0; }
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+.step-thumb {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-small);
+  background: var(--line);
+}
+.step-name { flex: 1; font-weight: 600; }
+.step-target { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* A bar fixed to the bottom of the screen, for the main button. */
+.bottom-bar, .player-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+}
+.bottom-bar .primary-btn { width: 100%; max-width: 440px; margin: 0 auto; }
+
+/* ---------- Player ---------- */
+
+.progress { height: 4px; background: var(--line); border-radius: 2px; margin-top: -1px; }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+.player { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+
+.player-art {
+  width: min(54vw, 230px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 36px;
+  background: var(--line);
+}
+.exercise-name { margin: 18px 0 0; font-size: 28px; letter-spacing: -0.01em; }
+.target { margin: 2px 0 0; font-size: 20px; font-weight: 600; color: var(--accent); }
+.cue { margin: 8px 0 0; text-align: center; color: var(--muted); }
+
+.howto { width: 100%; margin-top: 4px; text-align: center; }
+.howto summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.howto summary::-webkit-details-marker { display: none; }
+.howto summary .icon { width: 18px; height: 18px; transition: transform 0.2s; }
+.howto[open] summary .icon { transform: rotate(180deg); }
+.howto p { margin: 0 0 8px; text-align: left; padding: 14px 16px; background: var(--surface); border-radius: var(--radius-small); }
+
+.last-time {
+  width: 100%;
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  font-size: 15px;
+}
+
+.field { width: 100%; display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.field span { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+input {
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 17px; /* 16px or more stops iPhones zooming in when you type */
+}
+input:focus { outline: none; border-color: var(--accent); }
+input:disabled { background: transparent; border-color: transparent; color: var(--text); opacity: 1; -webkit-text-fill-color: var(--text); }
+input.needs-value { border-color: var(--warning); }
+
+.sets { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  transition: background 0.2s;
+}
+.set-row.done { background: var(--accent-soft); }
+
+.set-num { width: 22px; font-weight: 800; color: var(--muted); }
+.set-label { flex: 1; color: var(--muted); }
+
+.num-input { flex: 1; display: flex; align-items: center; gap: 6px; }
+.num-input input { text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.num-input span { font-size: 14px; color: var(--muted); }
+
+.tick {
+  width: var(--tap);
+  height: var(--tap);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  color: var(--line);
+}
+.done .tick { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+.countdown {
+  margin: 16px 0;
+  font-size: 72px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  line-height: 1;
+}
+.countdown.finished { color: var(--accent); }
+
+.round-btn {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.round-btn .icon { width: 32px; height: 32px; fill: currentColor; }
+
+.player-nav {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.player-nav button { flex: 1; max-width: 214px; }
+
+/* Rest: covers the bottom of the screen like a sheet. */
+.rest-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px var(--gutter) calc(24px + env(safe-area-inset-bottom));
+  border-radius: 32px 32px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -10px 40px rgba(40, 35, 20, 0.15);
+  animation: slide-up 0.25s ease-out;
+}
+.rest-overlay .countdown { color: var(--text); margin: 6px 0 12px; }
+.rest-overlay p { margin: 0; }
+.rest-bar { width: 100%; max-width: 360px; height: 6px; background: var(--line); border-radius: 3px; margin-bottom: 12px; }
+.rest-bar span { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 3px; }
+.rest-buttons { display: flex; gap: 12px; margin: 16px 0 12px; }
+.rest-overlay .primary-btn { width: 100%; max-width: 440px; }
+
+@keyframes slide-up { from { transform: translateY(100%); } }
+
+/* A quick flash when a timer ends. */
+body.flash::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: var(--accent);
+  animation: flash 0.8s ease-out forwards;
+}
+@keyframes flash { from { opacity: 0.35; } to { opacity: 0; } }
+
+/* ---------- Done ---------- */
+
+.done-screen { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 80px; }
+.done-screen .done-icon { color: var(--accent); }
+.done-screen .done-icon .icon { width: 88px; height: 88px; stroke-width: 1.5; }
+.done-screen .big-title { margin-top: 16px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-top: 32px; }
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.stat strong { font-size: 22px; }
