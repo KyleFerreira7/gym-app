@@ -884,3 +884,8 @@ body.flash::after {
 .info-list .icon { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
 .info-list.tips .icon { color: var(--accent); }
 .info-list.mistakes .icon { color: var(--warning); }
+
+/* ---------- Clean up ---------- */
+.danger-outline { color: var(--warning); border-color: var(--warning); }
+.card .danger-btn { min-height: 44px; }
+.info-panel .danger-btn { margin-top: 18px; }

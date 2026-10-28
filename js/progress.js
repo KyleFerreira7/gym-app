@@ -248,9 +248,28 @@ function showSession(sessionId) {
       </li>`;
   }).join("");
 
-  openSheet(getWorkout(s.workoutId)?.name ?? s.workoutName ?? "Workout", `
+  const name = getWorkout(s.workoutId)?.name ?? s.workoutName ?? "Workout";
+  openSheet(name, `
     <p class="muted center sheet-intro">${formatDate(s.date)} · ${minutes} min${s.completed ? "" : " · ended early"}</p>
-    <div class="sheet-list"><ul class="row-list">${rows || `<li class="muted center">No sets saved.</li>`}</ul></div>`);
+    <div class="sheet-list"><ul class="row-list">${rows || `<li class="muted center">No sets saved.</li>`}</ul></div>
+    <button class="danger-btn wide-btn" data-pick="delete">${icon("trash")} Delete this workout</button>`,
+    () => {
+      const sets = logs.filter((l) => l.reps || l.seconds).length;
+      if (!confirm(`Delete ${name} on ${formatDate(s.date)} and its ${sets} set${sets === 1 ? "" : "s"}? ` +
+        "This can't be undone.")) return true; // keep the sheet open
+      deleteSession(sessionId);
+      // Redraw whichever screen is showing (the Progress tab or an exercise's page).
+      const [render, args] = screenStack[screenStack.length - 1] || [renderProgress, []];
+      render(...args);
+    });
+}
+
+// Remove one workout and all its sets. "Last time", charts, bests and streaks are
+// all worked out from what's saved, so they correct themselves.
+function deleteSession(sessionId) {
+  DB.sessions = DB.sessions.filter((s) => s.id !== sessionId);
+  DB.logs = DB.logs.filter((l) => l.sessionId !== sessionId);
+  saveDB();
 }
 
 // A day in the calendar: one workout opens straight away; more than one, the latest.

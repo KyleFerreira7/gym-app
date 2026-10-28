@@ -4,6 +4,7 @@
   Your data lives only in this browser on this device. "Back up my data" saves
   all of it to a file (gym-backup-YYYY-MM-DD.json) that you keep somewhere safe
   (iCloud Drive, email it to yourself...). "Load a backup" reads such a file back.
+  "Clean up" deletes history (Start fresh) or everything (Delete everything).
 
   Loading MERGES: anything in the file that isn't here yet is added, and
   nothing already here is deleted or changed. So loading the same backup twice,
@@ -53,8 +54,48 @@ function renderMe(message = "") {
       <p class="row-sub">Loading a backup only adds what's missing. It never deletes anything here.</p>
     </section>
 
+    <h2 class="section-title">Clean up</h2>
+    <section class="card">
+      <p>Logged something by mistake? Delete a single workout from the Progress tab
+      (tap it, then Delete).</p>
+      <button class="secondary-btn danger-outline" data-action="start-fresh" ${DB.logs.length || DB.sessions.length ? "" : "disabled"}>
+        ${icon("history")} Start fresh</button>
+      <p class="row-sub">Deletes all workouts and sets. Keeps your own workouts, machine
+      settings, weight steps and "where is it" notes.</p>
+      <button class="danger-btn" data-action="delete-everything">${icon("trash")} Delete everything</button>
+      <p class="row-sub">Wipes all app data on this device, as if it was just installed.</p>
+    </section>
+
     ${tabBar("me")}
   `);
+}
+
+// ---------- Clean up ----------
+
+// A reminder to back up first, if there's no backup from today.
+function backupWarning() {
+  const today = DB.lastBackupAt && todayISO(new Date(DB.lastBackupAt)) === todayISO();
+  return today ? "" : "\n\nYou haven't backed up today. To keep a copy, tap Cancel, then Back up my data.";
+}
+
+function startFresh() {
+  const workouts = DB.sessions.length;
+  const sets = DB.logs.length;
+  if (!confirm(`Delete all ${workouts} workout${workouts === 1 ? "" : "s"} and ${sets} set${sets === 1 ? "" : "s"}? ` +
+    "Your own workouts, machine settings, weight steps and notes stay." + backupWarning())) return;
+  DB.logs = [];
+  DB.sessions = [];
+  DB.current = null;
+  saveDB();
+  renderMe("History cleared. A fresh start.");
+}
+
+function deleteEverything() {
+  if (!confirm("Delete ALL app data on this device: history, your own workouts, settings and " +
+    "notes? This can't be undone." + backupWarning())) return;
+  Object.assign(DB, emptyDB());
+  saveDB();
+  renderMe("Everything deleted. The app is like new.");
 }
 
 // ---------- Export ----------

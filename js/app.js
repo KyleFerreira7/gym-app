@@ -28,6 +28,8 @@ appEl.addEventListener("click", (event) => {
     case "open-session":   return showSession(id);
     case "open-exercise-progress": return goTo(renderExerciseProgress, id);
     case "export":         return exportData();
+    case "start-fresh":    return startFresh();
+    case "delete-everything": return deleteEverything();
     case "back":           return goBack();
     case "open-workout":   return goTo(renderDetail, id);
     case "open-plan":      return goTo(renderPlan, id);
