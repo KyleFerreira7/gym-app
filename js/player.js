@@ -7,8 +7,9 @@
       warmUps,      { stepIndex: true } for ticked warm-up sets
       drafts,       numbers typed but not ticked yet: { "step-set": { weight, reps } }
       timer,        timed exercise: { remainingMs, endsAt (null when paused), done }
-      rest }        rest countdown: { endsAt (null when paused), remainingMs, totalMs,
+      rest,         rest countdown: { endsAt (null when paused), remainingMs, totalMs,
                                       advance, nextLabel } or null
+      swaps }       exercises swapped for this workout only: { stepIndex: exerciseId }
 
   Timers store the moment they END (a timestamp), not a count. So if the phone
   locks for a minute, the countdown is still right when you come back.
@@ -30,6 +31,7 @@ function startWorkout(workoutId) {
     drafts: {},
     timer: null,
     rest: null,
+    swaps: {},
   };
   saveDB();
   renderPlayer();
@@ -52,8 +54,16 @@ function finishWorkout(completed) {
 
 // ---------- Small questions about the current step ----------
 
+// Step number `index` of a workout, with any swap made during this workout applied
+// (machine taken → "Swap"). The sets, reps and rest stay the same; only the exercise changes.
+function stepAt(workout, index, swaps = {}) {
+  const step = workout.steps[index];
+  if (!step || !swaps[index]) return step;
+  return { ...step, exercise: swaps[index], swappedFrom: step.exercise };
+}
+
 function currentStep() {
-  return getWorkout(DB.current.workoutId).steps[DB.current.step];
+  return stepAt(getWorkout(DB.current.workoutId), DB.current.step, DB.current.swaps);
 }
 
 function setsDone(step) {
@@ -196,7 +206,14 @@ function renderPlayer(keepScroll = false) {
           ${icon("info")}</button>
       </div>
       <p class="target">${targetText(step)}</p>
+      ${DB.locations[ex.id] ? `<p class="where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</p>` : ""}
       <p class="cue">${esc(ex.cue)}</p>
+      ${step.seconds ? "" : `
+        <button class="swap-btn" data-action="swap" aria-label="Swap this exercise">
+          ${icon("swap")} ${step.swappedFrom
+            ? `Swapped from ${esc(getExercise(step.swappedFrom).name)} · change`
+            : "Machine taken? Swap"}
+        </button>`}
       ${body}
     </section>
 
@@ -270,11 +287,18 @@ function setsBlock(step, ex) {
       <input type="text" data-field="settings" data-exercise="${ex.id}"
         value="${esc(DB.machineSettings[ex.id])}" placeholder="e.g. seat 4, back pad 2">
     </label>` : "";
+  const where = usesWeight(ex) ? `
+    <label class="field">
+      <span>Where is it?</span>
+      <input type="text" data-field="location" data-exercise="${ex.id}"
+        value="${esc(DB.locations[ex.id])}" placeholder="e.g. back left, by the mirrors">
+    </label>` : "";
 
   return `
     ${card}
     <div class="chip-row">${chips.join("")}</div>
     <p class="last-time">${lastLine}</p>
+    ${where}
     ${settings}`;
 }
 
@@ -330,6 +354,7 @@ function controlDock(step, isLast) {
         <p class="eyebrow">Rest${rest.endsAt ? "" : " · paused"}</p>
         <p class="rest-clock" data-countdown="rest">${formatClock(msLeft(rest) / 1000)}</p>
         <p class="row-sub">Next: ${esc(rest.nextLabel)}</p>
+        ${rest.nextWhere ? `<p class="row-sub rest-where">${icon("map-pin")} ${esc(rest.nextWhere)}</p>` : ""}
       </div>
       <div class="rest-buttons">
         <button class="small-btn" data-action="rest-adjust" data-seconds="-15">−15</button>
@@ -358,7 +383,7 @@ function startRest(step) {
   const seconds = step.rest ?? workout.rest;
   const nextSet = currentSetNumber(step);
   const lastSet = nextSet === null; // that was the final set of this exercise
-  const nextStep = workout.steps[DB.current.step + 1];
+  const nextStep = stepAt(workout, DB.current.step + 1, DB.current.swaps);
 
   // After the final set of the final exercise there's nothing to rest for.
   if (lastSet && !nextStep) return;
@@ -369,6 +394,8 @@ function startRest(step) {
     totalMs: seconds * 1000,
     advance: lastSet, // when this rest ends, move on to the next exercise
     nextLabel: lastSet ? getExercise(nextStep.exercise).name : `set ${nextSet} of ${step.sets}`,
+    // Walking to a new machine: say where it is (if you've noted it).
+    nextWhere: lastSet ? DB.locations[nextStep.exercise] || "" : "",
   };
 }
 
@@ -527,6 +554,22 @@ function adjustValue(field, dir) {
   }
 }
 
+// Swap the exercise on screen for another one, for this workout only.
+// Choosing the original exercise again undoes the swap.
+function swapExercise(exerciseId) {
+  const cur = DB.current;
+  cur.swaps = cur.swaps || {}; // workouts started before swapping existed
+  const original = getWorkout(cur.workoutId).steps[cur.step].exercise;
+  if (exerciseId === original) delete cur.swaps[cur.step];
+  else cur.swaps[cur.step] = exerciseId;
+  // Numbers pre-filled for the old exercise don't apply to the new one.
+  for (const key of Object.keys(cur.drafts)) {
+    if (key.startsWith(`${cur.step}-`)) delete cur.drafts[key];
+  }
+  saveDB();
+  renderPlayer(true);
+}
+
 // "change" next to the step size: 1 → 2 → 2.5 → 5 → 1 kg ...
 function cycleWeightStep(exerciseId) {
   const ex = getExercise(exerciseId);
@@ -570,7 +613,7 @@ function goToStep(delta) {
   cur.step = target;
   cur.rest = null;
   cur.timer = null; // a fresh timer for the new step...
-  const step = workout.steps[target];
+  const step = stepAt(workout, target, cur.swaps);
   if (step.seconds && setsDone(step) > 0) {
     cur.timer = { remainingMs: 0, endsAt: null, done: true }; // ...unless it's already done
   }
@@ -603,14 +646,15 @@ function renderDone(session) {
   const repLogs = logs.filter((log) => log.reps);
   const minutes = Math.max(1, Math.round((Date.now() - session.startedAt) / 60000));
   const kg = repLogs.reduce((sum, log) => sum + (log.weightKg || 0) * log.reps, 0);
+  const steps = workout.steps.map((_, i) => stepAt(workout, i, session.swaps || {}));
 
   // Exercises where today's sets all hit the top of the range: go up next time.
-  const goUp = workout.steps
+  const goUp = steps
     .filter((step) => readyToGoUp(logs.filter((l) => l.exerciseId === step.exercise), step, getExercise(step.exercise)))
     .map((step) => getExercise(step.exercise).name);
 
   // Exercises with nothing ticked count as skipped.
-  const skipped = workout.steps
+  const skipped = steps
     .filter((step) => !logs.some((log) => log.exerciseId === step.exercise))
     .map((step) => getExercise(step.exercise).name);
 

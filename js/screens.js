@@ -175,29 +175,24 @@ function tabBar(active) {
   return `<nav class="tab-bar">${tab("home", "Home", "house")}${tab("me", "Me", "user")}</nav>`;
 }
 
-// ---------- Exercise info (the (i) button) ----------
-// A sheet that slides up over the workout with the picture and numbered steps.
-// It sits outside the main screen, so timers carry on underneath and a redraw
-// of the workout (e.g. when rest ends) doesn't close it.
+// ---------- Sheets that slide up over the screen ----------
+// Used for exercise info (the (i) button) and for swapping an exercise.
+// A sheet sits outside the main screen, so timers carry on underneath and a
+// redraw of the workout (e.g. when rest ends) doesn't close it.
+// onPick(element) is called when something with data-pick="..." is tapped.
 
-function showInfo(exerciseId) {
-  const ex = getExercise(exerciseId);
-  // The how-to text, one sentence per numbered step.
-  const steps = ex.howTo.split(/(?<=\.)\s+/).filter(Boolean);
-
+function openSheet(title, bodyHtml, onPick) {
   const sheet = document.createElement("div");
   sheet.className = "info-sheet";
   sheet.innerHTML = `
     <div class="info-backdrop" data-close></div>
-    <section class="info-panel" role="dialog" aria-modal="true" aria-label="${esc(ex.name)}">
+    <section class="info-panel" role="dialog" aria-modal="true" aria-label="${esc(title)}">
       <header class="topbar">
         <span class="icon-btn"></span>
-        <h1>${esc(ex.name)}</h1>
+        <h1>${esc(title)}</h1>
         <button class="icon-btn" data-close aria-label="Close">${icon("x")}</button>
       </header>
-      ${exerciseImage(ex.id, "info-art")}
-      <p class="cue">${esc(ex.cue)}</p>
-      <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+      ${bodyHtml}
     </section>`;
 
   const close = () => {
@@ -205,9 +200,78 @@ function showInfo(exerciseId) {
     document.removeEventListener("keydown", onKey);
   };
   const onKey = (event) => { if (event.key === "Escape") close(); };
-  sheet.addEventListener("click", (event) => { if (event.target.closest("[data-close]")) close(); });
+  sheet.addEventListener("click", (event) => {
+    if (event.target.closest("[data-close]")) return close();
+    const picked = event.target.closest("[data-pick]");
+    if (picked && onPick) {
+      close();
+      onPick(picked);
+    }
+  });
   document.addEventListener("keydown", onKey);
   document.body.appendChild(sheet);
+}
+
+// Exercise info: the picture, the cue and numbered steps (one per sentence).
+function showInfo(exerciseId) {
+  const ex = getExercise(exerciseId);
+  const steps = ex.howTo.split(/(?<=\.)\s+/).filter(Boolean);
+  openSheet(ex.name, `
+    ${exerciseImage(ex.id, "info-art")}
+    <p class="cue">${esc(ex.cue)}</p>
+    <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`);
+}
+
+// Machine taken? Alternatives for the exercise on screen: its best matches first
+// (exercises with `swapFor` pointing at it), then others for the same main muscle.
+// Exercises already in this workout are left out, so you don't do one twice.
+function swapOptions(originalId, workout, swaps) {
+  const original = getExercise(originalId);
+  const inWorkout = workout.steps.map((_, i) => stepAt(workout, i, swaps).exercise);
+  const best = EXERCISES.filter((ex) => ex.swapFor?.includes(original.id));
+  const group = MUSCLE_GROUPS.find((g) => inMuscleGroup(original, g));
+  const sameMuscle = group ? exercisesInGroup(group).filter((ex) => !best.includes(ex)) : [];
+  const usable = (ex) => ex.id !== original.id && ex.type === "reps" && !inWorkout.includes(ex.id);
+  return { best: best.filter(usable), sameMuscle: sameMuscle.filter(usable) };
+}
+
+function showSwapSheet() {
+  const cur = DB.current;
+  const workout = getWorkout(cur.workoutId);
+  const step = currentStep();
+  const originalId = workout.steps[cur.step].exercise;
+  const { best, sameMuscle } = swapOptions(originalId, workout, cur.swaps || {});
+
+  const row = (ex, sub) => `
+    <li>
+      <button class="list-row" data-pick="${ex.id}">
+        ${exerciseImage(ex.id, "row-thumb")}
+        <span class="row-text">
+          <span class="row-title">${esc(ex.name)}</span>
+          <span class="row-sub">${esc(sub)}</span>
+        </span>
+        ${ex.id === step.exercise ? icon("check") : icon("chevron-right")}
+      </button>
+    </li>`;
+  const describe = (ex) => {
+    const equipment = ex.equipment[0].toUpperCase() + ex.equipment.slice(1);
+    return DB.locations[ex.id] ? `${equipment} · ${DB.locations[ex.id]}` : equipment;
+  };
+  const section = (title, list) => list.length
+    ? `<h2 class="section-title">${title}</h2><ul class="row-list">${list.map((ex) => row(ex, describe(ex))).join("")}</ul>`
+    : "";
+
+  const backToOriginal = step.swappedFrom
+    ? section("Original", [getExercise(originalId)])
+    : "";
+  const body = best.length || sameMuscle.length
+    ? section("Best swaps", best) + section("Same muscle", sameMuscle)
+    : `<p class="muted center">No other exercises for this muscle yet. Skip it with ⏭ instead.</p>`;
+
+  openSheet(`Swap ${getExercise(originalId).name}`, `
+    <p class="muted center sheet-intro">For this workout only. Same sets and reps.</p>
+    <div class="sheet-list">${backToOriginal}${body}</div>`,
+    (el) => swapExercise(el.dataset.pick));
 }
 
 // The bar at the top of the browse screens.
@@ -368,7 +432,9 @@ function renderDetail(workoutId) {
     return `
       <li class="step-row">
         ${exerciseImage(ex.id, "step-thumb")}
-        <span class="step-name">${esc(ex.name)}</span>
+        <span class="step-name">${esc(ex.name)}
+          ${DB.locations[ex.id] ? `<span class="row-sub step-where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</span>` : ""}
+        </span>
         <span class="step-target">${targetText(step)}</span>
       </li>`;
   }).join("");

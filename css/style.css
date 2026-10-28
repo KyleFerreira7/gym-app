@@ -717,3 +717,37 @@ body.flash::after {
 .backup-message { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; }
 .file-btn { cursor: pointer; }
 .file-btn input { display: none; }
+
+/* ---------- Swap and "where is it" ---------- */
+
+.where {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.where .icon, .rest-where .icon, .step-where .icon { width: 16px; height: 16px; color: var(--accent); }
+.rest-where, .step-where { display: flex; align-items: center; gap: 4px; }
+.step-where { font-weight: 400; }
+
+.swap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+.swap-btn .icon { width: 16px; height: 16px; }
+
+.sheet-intro { margin: 12px 0 0; }
+.sheet-list { align-self: stretch; }
+.sheet-list .list-row > .icon { color: var(--accent); }

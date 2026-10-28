@@ -34,6 +34,7 @@ appEl.addEventListener("click", (event) => {
     case "next":           return goToStep(+1);
     case "prev":           return goToStep(-1);
     case "info":           return showInfo(id);
+    case "swap":           return showSwapSheet();
     case "done-set":       return doneSet();
     case "edit-set":       return editSet(Number(el.dataset.set));
     case "cycle-step":     return cycleWeightStep(el.dataset.exercise);
@@ -57,6 +58,8 @@ appEl.addEventListener("input", (event) => {
 
   if (field === "settings") {
     DB.machineSettings[el.dataset.exercise] = el.value.trim();
+  } else if (field === "location") {
+    DB.locations[el.dataset.exercise] = el.value.trim();
   } else if (DB.current) {
     const key = `${DB.current.step}-${el.dataset.set}`;
     DB.current.drafts[key] = { ...DB.current.drafts[key], [field]: el.value };

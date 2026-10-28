@@ -19,6 +19,9 @@
     type       "reps" (count sets and reps) or "timed" (a countdown).
     cue        One short line shown during the workout.
     howTo      The full instructions (shown when you tap "How to").
+    swapFor    Optional: exercise ids this one is a good stand-in for, when that
+               machine is taken. The swap list shows these first, then other exercises
+               for the same main muscle.
     startKg    Optional: the weight to suggest the very first time (otherwise a light
                default for the equipment: machine 20, cable 10, dumbbell 4 kg).
 
@@ -156,6 +159,7 @@ const EXERCISES = [
     muscles: ["back", "biceps"],
     equipment: "machine",
     type: "reps",
+    swapFor: ["lat-pulldown"],
     cue: "More assistance weight makes it easier.",
     howTo: "Kneel or stand on the platform and grip the handles. Pull up until your chin is over " +
       "the handles, then lower slowly until your arms are straight.",
@@ -196,6 +200,7 @@ const EXERCISES = [
     muscles: ["quads", "glutes"],
     equipment: "dumbbell",
     type: "reps",
+    swapFor: ["leg-press", "leg-extension"],
     cue: "Hold the weight at your chest. Sit down between your heels.",
     howTo: "Hold one dumbbell upright against your chest. Feet a bit wider than your hips. Sit " +
       "down between your heels, chest up, then stand back up.",
@@ -206,6 +211,7 @@ const EXERCISES = [
     muscles: ["chest", "shoulders", "triceps"],
     equipment: "dumbbell",
     type: "reps",
+    swapFor: ["chest-press"],
     cue: "Press up over your chest, lower slowly.",
     howTo: "Lie on a bench set to a low incline, a dumbbell in each hand at chest level. Press " +
       "up until your arms are nearly straight, then lower slowly.",
@@ -216,6 +222,7 @@ const EXERCISES = [
     muscles: ["chest", "triceps"],
     equipment: "mat",
     type: "reps",
+    swapFor: ["chest-press"],
     cue: "Hands on a bench, body in a straight line.",
     howTo: "Hands on a bench or bar, a bit wider than your shoulders. Body in a straight line " +
       "from head to heels. Lower your chest towards the bench, then push back up.",
