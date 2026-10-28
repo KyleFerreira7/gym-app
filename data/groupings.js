@@ -26,3 +26,19 @@ const WORKOUT_TYPES = [
   { id: "machines", name: "Machines only", image: "leg-extension" },
   { id: "mat", name: "Mat only", image: "bird-dog" },
 ];
+
+// How each muscle in data/exercises.js is shown on the exercise info sheet.
+const MUSCLE_NAMES = {
+  "chest": "Chest",
+  "back": "Back (lats)",
+  "upper back": "Upper back",
+  "lower back": "Lower back",
+  "shoulders": "Shoulders",
+  "biceps": "Front of arms (biceps)",
+  "triceps": "Back of arms (triceps)",
+  "quads": "Front of thighs (quads)",
+  "hamstrings": "Back of thighs (hamstrings)",
+  "glutes": "Glutes",
+  "core": "Core",
+  "cardio": "Heart and lungs",
+};

@@ -221,13 +221,36 @@ function openSheet(title, bodyHtml, onPick, onClose) {
 }
 
 // Exercise info: the picture, the cue and numbered steps (one per sentence).
+// Exercise info: picture, muscles worked, numbered how-to steps, tips, common
+// mistakes, and your own best so far.
 function showInfo(exerciseId) {
   const ex = getExercise(exerciseId);
   const steps = ex.howTo.split(/(?<=\.)\s+/).filter(Boolean);
+  const muscles = (ex.muscles || []).map((m, i) =>
+    `<span class="muscle-chip ${i === 0 ? "main" : ""}">${i === 0 ? "Main: " : ""}${esc(MUSCLE_NAMES[m] || m)}</span>`).join("");
+  const list = (items, iconName, className) => items?.length
+    ? `<ul class="info-list ${className}">${items.map((s) => `<li>${icon(iconName)}<span>${esc(s)}</span></li>`).join("")}</ul>`
+    : "";
+
+  // Your best set so far, if you've done it.
+  const history = exerciseHistory(ex.id);
+  let best = "";
+  if (history.length) {
+    const top = history.map((h) => h.top).reduce((b, s) =>
+      (s.weightKg ?? 0) > (b.weightKg ?? 0) || ((s.weightKg ?? 0) === (b.weightKg ?? 0) && s.reps > b.reps) ? s : b);
+    best = `<p class="info-best">${icon("trending-up")} Your best: <strong>${esc(setText(top))}</strong>
+      · done ${history.length}×</p>`;
+  }
+
   openSheet(ex.name, `
     ${exerciseImage(ex.id, "info-art")}
     <p class="cue">${esc(ex.cue)}</p>
-    <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`);
+    ${best}
+    ${muscles ? `<div class="muscle-row">${muscles}</div>` : ""}
+    <h2 class="section-title info-title">How to</h2>
+    <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+    ${ex.tips?.length ? `<h2 class="section-title info-title">Tips</h2>${list(ex.tips, "check", "tips")}` : ""}
+    ${ex.mistakes?.length ? `<h2 class="section-title info-title">Common mistakes</h2>${list(ex.mistakes, "x", "mistakes")}` : ""}`);
 }
 
 // Machine taken? Alternatives for the exercise on screen: its best matches first
@@ -423,12 +446,15 @@ function renderMuscle(groupId) {
       ? `${equipment} · Last: ${firstSet.weightKg != null ? `${firstSet.weightKg} kg × ` : ""}${firstSet.reps}`
       : equipment;
     return `
-      <li class="list-row static">
-        ${exerciseImage(ex.id, "row-thumb")}
-        <span class="row-text">
-          <span class="row-title">${esc(ex.name)}</span>
-          <span class="row-sub">${lastText}</span>
-        </span>
+      <li>
+        <button class="list-row" data-action="info" data-id="${ex.id}">
+          ${exerciseImage(ex.id, "row-thumb")}
+          <span class="row-text">
+            <span class="row-title">${esc(ex.name)}</span>
+            <span class="row-sub">${lastText}</span>
+          </span>
+          ${icon("info")}
+        </button>
       </li>`;
   }).join("");
 
@@ -460,12 +486,14 @@ function renderDetail(workoutId) {
   const rows = workout.steps.map((step) => {
     const ex = getExercise(step.exercise);
     return `
-      <li class="step-row">
-        ${exerciseImage(ex.id, "step-thumb")}
-        <span class="step-name">${esc(ex.name)}
-          ${DB.locations[ex.id] ? `<span class="row-sub step-where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</span>` : ""}
-        </span>
-        <span class="step-target">${targetText(step)}</span>
+      <li>
+        <button class="step-row" data-action="info" data-id="${ex.id}" aria-label="${esc(ex.name)}: how to">
+          ${exerciseImage(ex.id, "step-thumb")}
+          <span class="step-name">${esc(ex.name)}
+            ${DB.locations[ex.id] ? `<span class="row-sub step-where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</span>` : ""}
+          </span>
+          <span class="step-target">${targetText(step)}</span>
+        </button>
       </li>`;
   }).join("");
 

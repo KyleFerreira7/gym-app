@@ -315,7 +315,7 @@ button:disabled { opacity: 0.35; cursor: default; }
   align-items: center;
   animation: sheet-up 0.25s ease-out;
 }
-.info-panel .topbar { width: 100%; }
+.info-panel .topbar { width: 100%; position: sticky; top: -4px; z-index: 1; background: var(--bg); }
 .info-art { width: min(56vw, 220px); aspect-ratio: 1; object-fit: cover; border-radius: 32px; margin-top: 18px; background: var(--line); }
 .info-steps { align-self: stretch; margin: 16px 0 0; padding: 0; list-style: none; counter-reset: step; }
 .info-steps li {
@@ -854,3 +854,33 @@ body.flash::after {
 .pick-mark .icon { width: 18px; height: 18px; }
 .pick-row.picked .pick-mark { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .sheet-done { position: sticky; bottom: 0; margin-top: 16px; }
+
+/* ---------- Fuller exercise info ---------- */
+
+.step-row { width: 100%; text-align: left; }
+.info-title { align-self: stretch; margin: 22px 0 10px; }
+.info-best { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 15px; }
+.info-best .icon { width: 18px; height: 18px; color: var(--accent); }
+.muscle-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 14px; }
+.muscle-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.muscle-chip.main { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.info-steps { margin-top: 0; }
+.info-list { align-self: stretch; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.info-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.info-list .icon { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
+.info-list.tips .icon { color: var(--accent); }
+.info-list.mistakes .icon { color: var(--warning); }
