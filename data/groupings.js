@@ -18,6 +18,7 @@ const MUSCLE_GROUPS = [
   { id: "shoulders", name: "Shoulders", muscles: ["shoulders"], image: "shoulder-press" },
   { id: "arms", name: "Arms", muscles: ["biceps", "triceps"], image: "dumbbell-curl" },
   { id: "core", name: "Core", muscles: ["core"], image: "dead-bug" },
+  { id: "cardio", name: "Cardio", muscles: ["cardio"], image: "treadmill-walk" },
 ];
 
 const WORKOUT_TYPES = [
@@ -25,6 +26,7 @@ const WORKOUT_TYPES = [
   { id: "short", name: "Short", image: "seated-row" },
   { id: "machines", name: "Machines only", image: "leg-extension" },
   { id: "mat", name: "Mat only", image: "bird-dog" },
+  { id: "cardio", name: "Cardio", image: "treadmill-walk" },
 ];
 
 // How each muscle in data/exercises.js is shown on the exercise info sheet.

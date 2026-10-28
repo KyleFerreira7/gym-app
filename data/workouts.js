@@ -207,6 +207,39 @@ const WORKOUTS = [
     ],
   },
 
+  // ---------- Cardio (draft, to review) ----------
+  {
+    id: "cardio-20",
+    name: "Cardio 20",
+    description: "Ten minutes on the treadmill, ten on the bike. A simple heart-and-lungs session.",
+    tags: ["cardio", "short"],
+    rest: 60,
+    steps: [
+      { exercise: "treadmill-walk", seconds: 600 },
+      { exercise: "bike", seconds: 600 },
+    ],
+  },
+  {
+    id: "cardio-mix",
+    name: "Cardio mix",
+    description: "Three machines, eight minutes each. Keeps it interesting.",
+    tags: ["cardio"],
+    rest: 60,
+    steps: [
+      { exercise: "treadmill-walk", seconds: 480 },
+      { exercise: "cross-trainer", seconds: 480 },
+      { exercise: "rowing-machine", seconds: 480 },
+    ],
+  },
+  {
+    id: "incline-walk",
+    name: "Incline walk",
+    description: "Thirty minutes of brisk walking uphill. Easy on the joints, good for the heart.",
+    tags: ["cardio"],
+    rest: 60,
+    steps: [{ exercise: "treadmill-walk", seconds: 1800 }],
+  },
+
   // ---------- Mat only ----------
   {
     id: "core-mat",

@@ -67,23 +67,33 @@ function weekStreaks() {
 function exerciseHistory(exerciseId) {
   const bySession = {};
   for (const log of DB.logs) {
-    if (log.exerciseId !== exerciseId || !log.reps) continue;
+    if (log.exerciseId !== exerciseId || !(log.reps || log.seconds)) continue;
     (bySession[log.sessionId] ||= []).push(log);
   }
   return Object.values(bySession)
     .map((sets) => {
       sets.sort((a, b) => a.set - b.set);
-      // Best set: heaviest weight, then most reps at that weight.
-      const top = sets.reduce((best, s) =>
-        (s.weightKg ?? 0) > (best.weightKg ?? 0) ||
-        ((s.weightKg ?? 0) === (best.weightKg ?? 0) && s.reps > best.reps) ? s : best);
+      const top = sets.reduce(betterSet);
       return { date: sets[0].date, at: sets[0].at, sessionId: sets[0].sessionId, sets, top };
     })
     .sort((a, b) => a.at - b.at);
 }
 
-// "40 kg × 12" or "12 reps"
+// Which of two sets is better: cardio → longer; otherwise heavier, then more reps.
+function betterSet(a, b) {
+  if (a.seconds || b.seconds) return (b.seconds ?? 0) > (a.seconds ?? 0) ? b : a;
+  return (b.weightKg ?? 0) > (a.weightKg ?? 0) ||
+    ((b.weightKg ?? 0) === (a.weightKg ?? 0) && b.reps > a.reps) ? b : a;
+}
+
+// Your best ever for an exercise (from exerciseHistory), or null.
+function bestOf(history) {
+  return history.length ? history.map((h) => h.top).reduce(betterSet) : null;
+}
+
+// "40 kg × 12", "12 reps" or, for cardio, "12 min · level 6"
 function setText(log) {
+  if (log.seconds) return cardioText(log);
   return log.weightKg != null ? `${log.weightKg} kg × ${log.reps}` : `${log.reps} reps`;
 }
 
@@ -107,13 +117,11 @@ function renderProgress() {
   }
 
   // Exercises you've done with sets, most recently done first.
-  const done = [...new Set([...DB.logs].filter((l) => l.reps).sort((a, b) => b.at - a.at).map((l) => l.exerciseId))];
+  const done = [...new Set([...DB.logs].filter((l) => l.reps || l.seconds).sort((a, b) => b.at - a.at).map((l) => l.exerciseId))];
   const exerciseRows = done.map((id) => {
     const ex = getExercise(id);
     const history = exerciseHistory(id);
-    const best = history.reduce((b, h) =>
-      (h.top.weightKg ?? 0) > (b.weightKg ?? 0) ||
-      ((h.top.weightKg ?? 0) === (b.weightKg ?? 0) && h.top.reps > b.reps) ? h.top : b, history[0].top);
+    const best = bestOf(history);
     return `
       <li>
         <button class="list-row" data-action="open-exercise-progress" data-id="${id}">
@@ -129,7 +137,10 @@ function renderProgress() {
 
   const recent = [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 8).map((s) => {
     const sets = DB.logs.filter((l) => l.sessionId === s.id && l.reps).length;
+    const cardioMin = Math.round(DB.logs.filter((l) => l.sessionId === s.id && l.seconds)
+      .reduce((sum, l) => sum + l.seconds, 0) / 60);
     const minutes = Math.max(1, Math.round((s.finishedAt - s.startedAt) / 60000));
+    const what = [sets ? `${sets} sets` : "", cardioMin ? `${cardioMin} min cardio` : ""].filter(Boolean).join(" · ") || "No sets";
     return `
       <li>
         <button class="list-row" data-action="open-session" data-id="${s.id}">
@@ -137,7 +148,7 @@ function renderProgress() {
             ${new Date(s.date + "T12:00").toLocaleDateString("en-GB", { month: "short" })}</span>
           <span class="row-text">
             <span class="row-title">${esc(getWorkout(s.workoutId)?.name ?? s.workoutName ?? "Workout")}</span>
-            <span class="row-sub">${sets} sets · ${minutes} min${s.completed ? "" : " · ended early"}</span>
+            <span class="row-sub">${what} · ${minutes} min total${s.completed ? "" : " · ended early"}</span>
           </span>
           ${icon("chevron-right")}
         </button>
@@ -283,14 +294,22 @@ function showDay(iso) {
 function renderExerciseProgress(exerciseId) {
   const ex = getExercise(exerciseId);
   const history = exerciseHistory(exerciseId);
-  const weighted = history.some((h) => h.top.weightKg != null);
+  const cardio = ex.type === "cardio";
+  const weighted = !cardio && history.some((h) => h.top.weightKg != null);
   const allSets = history.flatMap((h) => h.sets);
+  const mode = cardio ? "min" : weighted ? "kg" : "reps";
 
   // Personal bests.
   const heaviest = allSets.reduce((b, s) => ((s.weightKg ?? 0) > (b.weightKg ?? 0) ? s : b), allSets[0]);
   const mostReps = allSets.reduce((b, s) => (s.reps > b.reps ? s : b), allSets[0]);
   const bestSet = allSets.reduce((b, s) => ((s.weightKg ?? 0) * s.reps > (b.weightKg ?? 0) * b.reps ? s : b), allSets[0]);
-  const bests = weighted ? [
+  const longest = allSets.reduce((b, s) => ((s.seconds ?? 0) > (b.seconds ?? 0) ? s : b), allSets[0]);
+  const farthest = allSets.reduce((b, s) => ((s.cardio?.distance ?? 0) > (b.cardio?.distance ?? 0) ? s : b), allSets[0]);
+  const bests = cardio ? [
+    ["Longest", formatDuration(Math.round(longest.seconds / 60) * 60 || longest.seconds), formatDate(longest.date)],
+    ...(farthest.cardio?.distance ? [["Farthest", `${farthest.cardio.distance} km`, formatDate(farthest.date)]] : []),
+    ["Done", `${history.length}×`, `since ${formatDate(history[0].date).slice(4)}`],
+  ] : weighted ? [
     ["Heaviest", `${heaviest.weightKg} kg`, `× ${heaviest.reps} · ${formatDate(heaviest.date)}`],
     ["Best set", `${bestSet.weightKg}×${bestSet.reps}`, `${Math.round(bestSet.weightKg * bestSet.reps)} kg moved`],
     ["Done", `${history.length}×`, `since ${formatDate(history[0].date).slice(4)}`],
@@ -318,9 +337,9 @@ function renderExerciseProgress(exerciseId) {
           <span class="row-sub">${esc(sub)}</span></div>`).join("")}
     </div>
 
-    <h2 class="section-title">${weighted ? "Heaviest set per workout (kg)" : "Most reps per workout"}</h2>
+    <h2 class="section-title">${{ kg: "Heaviest set per workout (kg)", reps: "Most reps per workout", min: "Minutes per workout" }[mode]}</h2>
     <section class="card chart-card">
-      ${progressChart(history, weighted)}
+      ${progressChart(history, mode)}
     </section>
 
     <h2 class="section-title">History</h2>
@@ -330,8 +349,10 @@ function renderExerciseProgress(exerciseId) {
 
 // A simple line chart: one point per workout (the heaviest set, or most reps).
 // Tap (or hover) a point to read it; the latest is shown to start with.
-function progressChart(history, weighted) {
-  const values = history.map((h) => (weighted ? h.top.weightKg ?? 0 : h.top.reps));
+// mode: "kg" (heaviest set), "reps" (most reps) or "min" (cardio minutes).
+function progressChart(history, mode) {
+  const values = history.map((h) =>
+    mode === "kg" ? h.top.weightKg ?? 0 : mode === "min" ? Math.round(h.top.seconds / 6) / 10 : h.top.reps);
   const W = 320, H = 170, left = 36, right = 14, top = 14, bottom = 26;
 
   // Y axis: from a round number below the lowest to one above the highest.
@@ -362,7 +383,7 @@ function progressChart(history, weighted) {
   return `
     <p class="chart-readout" data-readouts='${esc(JSON.stringify(readouts))}'>${esc(readouts[readouts.length - 1])}</p>
     <svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
-      aria-label="${history.length} workouts, from ${values[0]} to ${values[values.length - 1]}${weighted ? " kg" : " reps"}">
+      aria-label="${history.length} workouts, from ${values[0]} to ${values[values.length - 1]} ${mode}">
       ${grid.join("")}
       ${history.length > 1 ? `<path class="chart-line" d="${line}"/>` : ""}
       ${points}

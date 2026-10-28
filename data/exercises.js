@@ -16,7 +16,9 @@
     muscles    Muscles worked, MAIN one first. The first one decides where it shows
                in "Browse by muscle" (see data/groupings.js).
     equipment  "machine", "cable", "dumbbell", "mat" or "cardio".
-    type       "reps" (count sets and reps) or "timed" (a countdown).
+    type       "reps" (count sets and reps) or "cardio" (a countdown, logged in minutes).
+    metrics    Cardio only: what you can note for it, any of "level", "speed" (km/h),
+               "incline" (%) and "distance" (km). Shown as − / + under the timer.
     cue        One short line shown during the workout.
     howTo      The full instructions, one step per sentence (shown under (i)).
     tips       Optional: short tips, shown under (i).
@@ -33,13 +35,14 @@
 */
 
 const EXERCISES = [
-  // ---------- Warm-up ----------
+  // ---------- Cardio ----------
   {
     id: "bike",
     name: "Exercise bike",
     muscles: ["cardio"],
     equipment: "cardio",
-    type: "timed",
+    type: "cardio",
+    metrics: ["level", "distance"],
     cue: "Easy pace. You should be able to chat.",
     howTo: "Set the seat so your leg is nearly straight at the bottom of each pedal stroke. " +
       "Pick a low resistance and pedal at an easy, steady pace to warm up.",
@@ -50,6 +53,85 @@ const EXERCISES = [
     mistakes: [
       "Seat too low, so your knees come up high.",
       "Going hard: this is only a warm-up.",
+    ],
+  },
+
+  {
+    id: "treadmill-walk",
+    name: "Treadmill",
+    muscles: ["cardio", "glutes"],
+    equipment: "cardio",
+    type: "cardio",
+    metrics: ["speed", "incline", "distance"],
+    cue: "Brisk walk on an incline. Hands off the rails if you can.",
+    howTo: "Step on with the belt stopped and press start. Walk at an easy pace for a minute, " +
+      "then raise the incline and speed until you're breathing harder but can still talk. " +
+      "Lower both for the last minute to cool down.",
+    tips: [
+      "An incline walk is easy on the joints and works your glutes.",
+      "Take normal steps and stay near the front of the belt.",
+    ],
+    mistakes: [
+      "Hanging on to the rails, which takes away most of the work.",
+      "Starting fast instead of warming up first.",
+    ],
+  },
+  {
+    id: "cross-trainer",
+    name: "Cross-trainer",
+    muscles: ["cardio", "quads"],
+    equipment: "cardio",
+    type: "cardio",
+    metrics: ["level", "distance"],
+    cue: "Smooth, steady strides. Push and pull the handles.",
+    howTo: "Step onto the pedals and hold the moving handles. Start striding to wake the machine up, " +
+      "pick a level, then keep a smooth rhythm, pushing and pulling with your arms as your legs move.",
+    tips: [
+      "Push through your heels to use your glutes more.",
+      "Go backwards for a minute to change it up.",
+    ],
+    mistakes: [
+      "Standing on your toes.",
+      "Letting the machine's momentum do the work at a very low level.",
+    ],
+  },
+  {
+    id: "rowing-machine",
+    name: "Rowing machine",
+    muscles: ["cardio", "back"],
+    equipment: "cardio",
+    type: "cardio",
+    metrics: ["level", "distance"],
+    cue: "Legs, then lean back, then arms. Reverse on the way in.",
+    howTo: "Strap your feet in with the strap across the widest part of your foot. Push with your legs " +
+      "first, lean back slightly, then pull the handle to your lower ribs. Come back in the opposite " +
+      "order: arms, then lean forward, then bend your knees.",
+    tips: [
+      "Most of the power comes from your legs.",
+      "Keep the damper (the lever on the fan) around 3 to 5.",
+    ],
+    mistakes: [
+      "Pulling with your arms before your legs have pushed.",
+      "Rounding your back at the front of the stroke.",
+    ],
+  },
+  {
+    id: "stair-climber",
+    name: "Stair climber",
+    muscles: ["cardio", "glutes"],
+    equipment: "cardio",
+    type: "cardio",
+    metrics: ["level"],
+    cue: "Steady steps, upright posture, light hands on the rails.",
+    howTo: "Hold the rails, step on and press start at a low level. Step with your whole foot on each " +
+      "stair, stand tall and keep a steady pace. Raise the level once you're warm.",
+    tips: [
+      "Short sessions are tough: start with 5 to 10 minutes.",
+      "Light hands on the rails, for balance only.",
+    ],
+    mistakes: [
+      "Leaning heavily on the rails.",
+      "Only using your toes on each step.",
     ],
   },
 

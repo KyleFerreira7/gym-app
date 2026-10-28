@@ -236,8 +236,7 @@ function showInfo(exerciseId) {
   const history = exerciseHistory(ex.id);
   let best = "";
   if (history.length) {
-    const top = history.map((h) => h.top).reduce((b, s) =>
-      (s.weightKg ?? 0) > (b.weightKg ?? 0) || ((s.weightKg ?? 0) === (b.weightKg ?? 0) && s.reps > b.reps) ? s : b);
+    const top = bestOf(history);
     best = `<p class="info-best">${icon("trending-up")} Your best: <strong>${esc(setText(top))}</strong>
       · done ${history.length}×</p>`;
   }
@@ -262,7 +261,7 @@ function swapOptions(originalId, workout, swaps) {
   const best = EXERCISES.filter((ex) => ex.swapFor?.includes(original.id));
   const group = MUSCLE_GROUPS.find((g) => inMuscleGroup(original, g));
   const sameMuscle = group ? exercisesInGroup(group).filter((ex) => !best.includes(ex)) : [];
-  const usable = (ex) => ex.id !== original.id && ex.type === "reps" && !inWorkout.includes(ex.id);
+  const usable = (ex) => ex.id !== original.id && ex.type === original.type && !inWorkout.includes(ex.id);
   return { best: best.filter(usable), sameMuscle: sameMuscle.filter(usable) };
 }
 
@@ -300,7 +299,7 @@ function showSwapSheet() {
     : `<p class="muted center">No other exercises for this muscle yet. Skip it with ⏭ instead.</p>`;
 
   openSheet(`Swap ${getExercise(originalId).name}`, `
-    <p class="muted center sheet-intro">For this workout only. Same sets and reps.</p>
+    <p class="muted center sheet-intro">For this workout only. ${step.seconds ? "Same time." : "Same sets and reps."}</p>
     <div class="sheet-list">${backToOriginal}${body}</div>`,
     (el) => swapExercise(el.dataset.pick));
 }

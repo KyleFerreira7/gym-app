@@ -29,14 +29,21 @@ function editWorkout(workoutId) {
     id: w.id,
     name: w.name,
     rest: w.rest,
-    bike: w.steps.some((s) => s.exercise === "bike"),
-    steps: w.steps.filter((s) => !s.seconds).map((s) => ({ ...s, reps: [...s.reps] })),
+    // The warm-up is a 5-minute bike as the first step; everything else is yours.
+    bike: isWarmUp(w.steps[0]),
+    steps: w.steps.filter((s, i) => !(i === 0 && isWarmUp(s)))
+      .map((s) => (s.reps ? { ...s, reps: [...s.reps] } : { ...s })),
   };
   goTo(renderBuilder);
 }
 
-// A new exercise's starting sets and reps, by equipment.
+function isWarmUp(step) {
+  return step?.exercise === "bike" && step.seconds === BIKE_WARM_UP.seconds;
+}
+
+// A new exercise's starting sets and reps (or minutes, for cardio).
 function defaultStep(ex) {
+  if (ex.type === "cardio") return { exercise: ex.id, seconds: 600 };
   if (ex.equipment === "mat") return { exercise: ex.id, sets: 2, reps: [10, 12], eachSide: Boolean(ex.eachSide) };
   return { exercise: ex.id, sets: 3, reps: [8, 12], warmUp: true };
 }
@@ -65,13 +72,19 @@ function renderBuilder(message = "", keepScroll = false) {
           <button class="icon-btn" data-action="b-remove" data-i="${i}" aria-label="Remove">${icon("x")}</button>
         </div>
         <div class="builder-controls">
+          ${step.seconds ? `
+          <span class="mini-stepper">
+            <button class="mini-btn" data-action="b-mins" data-i="${i}" data-dir="-1" aria-label="One minute less">${icon("minus")}</button>
+            <strong>${Math.round(step.seconds / 60)} min</strong>
+            <button class="mini-btn" data-action="b-mins" data-i="${i}" data-dir="1" aria-label="One minute more">${icon("plus")}</button>
+          </span>` : `
           <span class="mini-stepper">
             <button class="mini-btn" data-action="b-sets" data-i="${i}" data-dir="-1" aria-label="Fewer sets">${icon("minus")}</button>
             <strong>${step.sets} sets</strong>
             <button class="mini-btn" data-action="b-sets" data-i="${i}" data-dir="1" aria-label="More sets">${icon("plus")}</button>
           </span>
           <button class="small-btn" data-action="b-reps" data-i="${i}">
-            × ${repsText(step.reps)} reps${step.eachSide ? " each side" : ""}</button>
+            × ${repsText(step.reps)} reps${step.eachSide ? " each side" : ""}</button>`}
         </div>
       </li>`;
   }).join("");
@@ -117,6 +130,7 @@ function builderAction(action, el) {
   if (action === "b-bike") builderDraft.bike = !builderDraft.bike;
   if (action === "b-rest") builderDraft.rest = REST_CHOICES[(REST_CHOICES.indexOf(builderDraft.rest) + 1) % REST_CHOICES.length];
   if (action === "b-sets") step.sets = Math.min(6, Math.max(1, step.sets + dir));
+  if (action === "b-mins") step.seconds = Math.min(90, Math.max(1, Math.round(step.seconds / 60) + dir)) * 60;
   if (action === "b-reps") {
     const now = REP_CHOICES.findIndex((r) => r[0] === step.reps[0] && r[1] === step.reps[1]);
     step.reps = [...REP_CHOICES[(now + 1) % REP_CHOICES.length]];
@@ -148,7 +162,7 @@ function showAddSheet() {
       </button>
     </li>`;
   const groups = MUSCLE_GROUPS.map((g) => {
-    const list = exercisesInGroup(g).filter((ex) => ex.type === "reps");
+    const list = exercisesInGroup(g);
     return list.length ? `<h2 class="section-title">${esc(g.name)}</h2><ul class="row-list">${list.map(row).join("")}</ul>` : "";
   }).join("");
 

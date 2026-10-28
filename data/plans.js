@@ -43,4 +43,6 @@ const FEATURED = [
   { workout: "first-day-back", label: "Been away?" },
   { workout: "lunch-a", label: "Quick" },
   { workout: "core-mat", label: "Mat only" },
+  { workout: "cardio-mix", label: "Cardio" },
+  { workout: "incline-walk", label: "Cardio" },
 ];
