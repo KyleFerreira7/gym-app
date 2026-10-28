@@ -61,21 +61,11 @@ const EXERCISES = [
   },
   {
     id: "seated-row",
-    name: "Seated row",
-    muscles: ["upper back", "biceps"],
-    equipment: "machine",
-    type: "reps",
-    cue: "Pull to your lower ribs, squeeze your shoulder blades.",
-    howTo: "Chest against the pad. Pull the handles to your lower ribs, squeezing your shoulder " +
-      "blades together, then let your arms straighten slowly. Don't lean back to swing it.",
-  },
-  {
-    id: "seated-row-cable",
     name: "Seated cable row",
     muscles: ["upper back", "biceps"],
     equipment: "cable",
     type: "reps",
-    cue: "Sit tall. Pull to your lower ribs, no swinging.",
+    cue: "Sit tall. Pull to your lower ribs, squeeze your shoulder blades.",
     howTo: "Sit tall with your feet on the platform and knees slightly bent. Pull the handle to " +
       "your lower ribs, squeezing your shoulder blades together, then let your arms straighten " +
       "slowly. Don't lean back to swing it.",
