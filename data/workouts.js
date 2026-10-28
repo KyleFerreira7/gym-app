@@ -207,7 +207,7 @@ const WORKOUTS = [
     ],
   },
 
-  // ---------- Cardio (draft, to review) ----------
+  // ---------- Cardio ----------
   {
     id: "cardio-20",
     name: "Cardio 20",
