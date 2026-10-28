@@ -1,4 +1,4 @@
-"""Draw the app icon (a dumbbell on the app's green) as PNG files.
+"""Draw the app icon (a black dumbbell on beige) as PNG files.
 
 These are the icons your phone shows on the home screen. Uses only Python's
 built-in modules (no installs): it works out the colour of every pixel and
@@ -18,8 +18,8 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "img" / "icons"
 
-BACKGROUND = (47, 107, 79)    # --accent in css/style.css
-FOREGROUND = (246, 244, 239)  # --bg in css/style.css
+BACKGROUND = (233, 222, 200)  # warm beige (#e9dec8)
+FOREGROUND = (34, 36, 31)     # near-black, --text in css/style.css (#22241f)
 SIZES = [180, 192, 512]
 SAMPLES = 4                    # 4 x 4 samples per pixel = smooth edges
 
