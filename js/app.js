@@ -9,6 +9,10 @@
 appEl.addEventListener("click", (event) => {
   unlockSound(); // iPhones only allow sound after a tap
 
+  // A point on a progress chart: show what it was.
+  const point = event.target.closest("[data-chart-point]");
+  if (point) return showChartPoint(point);
+
   const el = event.target.closest("[data-action]");
   if (!el || el.disabled) return;
   const id = el.dataset.id;
@@ -16,7 +20,13 @@ appEl.addEventListener("click", (event) => {
   switch (el.dataset.action) {
     // Browsing
     case "home":           return goHome();
-    case "tab":            return id === "me" ? goMe() : goHome();
+    case "tab":            return id === "me" ? goMe() : id === "progress" ? goProgress() : goHome();
+
+    // Progress
+    case "cal-move":       return moveCalendar(Number(id));
+    case "open-day":       return showDay(id);
+    case "open-session":   return showSession(id);
+    case "open-exercise-progress": return goTo(renderExerciseProgress, id);
     case "export":         return exportData();
     case "back":           return goBack();
     case "open-workout":   return goTo(renderDetail, id);
@@ -88,6 +98,12 @@ appEl.addEventListener("pointerdown", (event) => {
 const stopHold = () => clearTimeout(holdTimer);
 ["pointerup", "pointercancel", "pointerout"].forEach((type) => appEl.addEventListener(type, stopHold));
 window.addEventListener("blur", stopHold);
+
+// Hovering a chart point with a mouse shows it too.
+appEl.addEventListener("pointerover", (event) => {
+  const point = event.target.closest("[data-chart-point]");
+  if (point && event.pointerType === "mouse") showChartPoint(point);
+});
 
 // "Load a backup": a file was picked.
 appEl.addEventListener("change", (event) => {

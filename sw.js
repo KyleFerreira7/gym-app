@@ -16,7 +16,7 @@
   shows up straight away on a normal reload.
 */
 
-const CACHE = "gym-app-v1"; // change this name to throw away all saved copies
+const CACHE = "gym-app-v2"; // change this name to throw away all saved copies
 const WAIT_MS = 3000;
 
 // The app's own files.
@@ -35,6 +35,7 @@ const APP_FILES = [
   "js/wakelock.js",
   "js/screens.js",
   "js/player.js",
+  "js/progress.js",
   "js/me.js",
   "js/app.js",
   "img/placeholder.svg",
@@ -51,7 +52,8 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) =>
       // Save each file on its own, so one missing picture (e.g. bike) doesn't stop the rest.
-      Promise.allSettled([...APP_FILES, ...PICTURES].map((file) => cache.add(file)))
+      Promise.allSettled([...APP_FILES, ...PICTURES].map((file) =>
+        cache.add(new Request(file, { cache: "no-cache" }))))
     )
   );
   self.skipWaiting(); // use the new version straight away
@@ -76,7 +78,10 @@ self.addEventListener("fetch", (event) => {
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
 
-  const fromNetwork = fetch(request).then((response) => {
+  // cache: "no-cache" asks the server every time whether the file changed (a quick
+  // check), instead of trusting the browser's own short-term copy. Without it, right
+  // after an update the phone could mix new and old files for a few minutes.
+  const fromNetwork = fetch(request, { cache: "no-cache" }).then((response) => {
     if (response.ok) cache.put(request, response.clone()); // keep the saved copy fresh
     return response;
   });

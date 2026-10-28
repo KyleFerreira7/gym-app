@@ -41,6 +41,12 @@ function goHome() {
   renderHome();
 }
 
+function goProgress() {
+  screenStack.length = 0;
+  screenStack.push([renderProgress, []]);
+  renderProgress();
+}
+
 function goMe() {
   screenStack.length = 0;
   screenStack.push([renderMe, []]);
@@ -165,14 +171,14 @@ function tile(action, id, imageId, name) {
     </button>`;
 }
 
-// The tab bar at the bottom of the main screens (Home and Me).
+// The tab bar at the bottom of the main screens (Home, Progress and Me).
 function tabBar(active) {
   const tab = (id, label, iconName) => `
     <button class="tab ${active === id ? "active" : ""}" data-action="tab" data-id="${id}"
       ${active === id ? 'aria-current="page"' : ""}>
       ${icon(iconName)}<span>${label}</span>
     </button>`;
-  return `<nav class="tab-bar">${tab("home", "Home", "house")}${tab("me", "Me", "user")}</nav>`;
+  return `<nav class="tab-bar">${tab("home", "Home", "house")}${tab("progress", "Progress", "chart")}${tab("me", "Me", "user")}</nav>`;
 }
 
 // ---------- Sheets that slide up over the screen ----------
