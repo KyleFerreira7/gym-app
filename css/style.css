@@ -552,3 +552,50 @@ body.flash::after {
 .nudge p { margin: 0; }
 .nudge .icon { color: var(--accent); margin-top: 1px; }
 .done-nudge { margin-top: 24px; }
+
+/* ---------- Tab bar (Home, Me) ---------- */
+
+.tab-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  z-index: 5;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 15px;
+}
+.tab.active { background: var(--accent-soft); color: var(--accent); }
+
+/* ---------- Me ---------- */
+
+.me-stats { margin-top: 20px; }
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.card p { margin: 0; }
+.backup-status { font-weight: 700; color: var(--accent); }
+.backup-status.due { color: var(--warning); }
+.backup-message { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; }
+.file-btn { cursor: pointer; }
+.file-btn input { display: none; }

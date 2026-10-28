@@ -41,6 +41,12 @@ function goHome() {
   renderHome();
 }
 
+function goMe() {
+  screenStack.length = 0;
+  screenStack.push([renderMe, []]);
+  renderMe();
+}
+
 // ---------- Shared helpers ----------
 
 // Make text safe to put inside HTML (so a "<" in a note can't break the page).
@@ -159,6 +165,16 @@ function tile(action, id, imageId, name) {
     </button>`;
 }
 
+// The tab bar at the bottom of the main screens (Home and Me).
+function tabBar(active) {
+  const tab = (id, label, iconName) => `
+    <button class="tab ${active === id ? "active" : ""}" data-action="tab" data-id="${id}"
+      ${active === id ? 'aria-current="page"' : ""}>
+      ${icon(iconName)}<span>${label}</span>
+    </button>`;
+  return `<nav class="tab-bar">${tab("home", "Home", "house")}${tab("me", "Me", "user")}</nav>`;
+}
+
 // The bar at the top of the browse screens.
 function topbar(title, closeAction = "back") {
   return `
@@ -236,6 +252,8 @@ function renderHome() {
 
     <h2 class="section-title">Browse by type</h2>
     <section class="tile-grid two">${typeTiles}</section>
+
+    ${tabBar("home")}
   `);
 }
 

@@ -35,6 +35,7 @@ const APP_FILES = [
   "js/wakelock.js",
   "js/screens.js",
   "js/player.js",
+  "js/me.js",
   "js/app.js",
   "img/placeholder.svg",
   "img/icons/icon-180.png",

@@ -16,6 +16,8 @@ appEl.addEventListener("click", (event) => {
   switch (el.dataset.action) {
     // Browsing
     case "home":           return goHome();
+    case "tab":            return id === "me" ? goMe() : goHome();
+    case "export":         return exportData();
     case "back":           return goBack();
     case "open-workout":   return goTo(renderDetail, id);
     case "open-plan":      return goTo(renderPlan, id);
@@ -44,7 +46,7 @@ appEl.addEventListener("click", (event) => {
 appEl.addEventListener("input", (event) => {
   const el = event.target;
   const field = el.dataset.field;
-  if (!field) return;
+  if (!field || field === "import") return;
 
   if (field === "settings") {
     DB.machineSettings[el.dataset.exercise] = el.value.trim();
@@ -54,6 +56,12 @@ appEl.addEventListener("input", (event) => {
     el.classList.remove("needs-value");
   }
   saveDB();
+});
+
+// "Load a backup": a file was picked.
+appEl.addEventListener("change", (event) => {
+  const el = event.target;
+  if (el.dataset.field === "import" && el.files[0]) importData(el.files[0]);
 });
 
 // The clock that keeps timers moving on screen.
