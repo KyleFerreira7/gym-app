@@ -240,7 +240,7 @@ const WORKOUTS = [
     steps: [{ exercise: "treadmill-walk", seconds: 1800 }],
   },
 
-  // ---------- Swimming (draft, to review). For swims, reps = lengths per repeat. ----------
+  // ---------- Swimming. For swims, sets = repeats and reps = lengths per repeat. ----------
   {
     id: "easy-swim",
     name: "Easy swim",
