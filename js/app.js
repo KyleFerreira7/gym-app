@@ -37,7 +37,7 @@ appEl.addEventListener("click", (event) => {
     case "open-type":      return goTo(renderType, id);
     case "build":          return startBuilder();
     case "edit-workout":   return editWorkout(id);
-    case "b-bike": case "b-rest": case "b-sets": case "b-mins": case "b-reps": case "b-remove":
+    case "b-bike": case "b-rest": case "b-sets": case "b-reps": case "b-remove":
     case "b-move": case "b-add": case "b-save": case "b-delete":
       return builderAction(el.dataset.action, el);
     case "follow-plan":
@@ -55,15 +55,12 @@ appEl.addEventListener("click", (event) => {
     case "done-set":       return doneSet();
     case "edit-set":       return editSet(Number(el.dataset.set));
     case "cycle-step":     return cycleWeightStep(el.dataset.exercise);
-    case "cycle-pool":     return cyclePoolLength();
     case "adjust":
       // Taps and holds are handled on "pointerdown" below; this is for keyboards.
       if (event.detail === 0) adjustValue(el.dataset.field, Number(el.dataset.dir));
       return;
     case "toggle-warmup":  return toggleWarmUp();
     case "toggle-timer":   return toggleTimer();
-    case "timer-adjust":   return adjustTimer(Number(el.dataset.dir));
-    case "finish-timer":   return finishTimer();
     case "toggle-rest":    return toggleRest();
     case "rest-skip":      return endRest();
     case "rest-adjust":    return adjustRest(Number(el.dataset.seconds));
@@ -78,8 +75,6 @@ appEl.addEventListener("input", (event) => {
 
   if (field === "settings") {
     DB.machineSettings[el.dataset.exercise] = el.value.trim();
-  } else if (field.startsWith("cardio-") && DB.current) {
-    cardioDraft(getExercise(currentStep().exercise))[field.slice(7)] = el.value;
   } else if (field === "builder-name") {
     builderDraft.name = el.value;
     return; // saved with the workout, not on every key

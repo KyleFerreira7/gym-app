@@ -6,7 +6,7 @@
       step,         which step of the workout is on screen (0 = first)
       warmUps,      { stepIndex: true } for ticked warm-up sets
       drafts,       numbers typed but not ticked yet: { "step-set": { weight, reps } }
-      timer,        cardio countdown: { totalMs, remainingMs, endsAt (null when paused), done }
+      timer,        timed exercise: { remainingMs, endsAt (null when paused), done }
       rest,         rest countdown: { endsAt (null when paused), remainingMs, totalMs,
                                       advance, nextLabel } or null
       swaps }       exercises swapped for this workout only: { stepIndex: exerciseId }
@@ -80,7 +80,7 @@ function stepFinished(step) {
 // (e.g. 12 on all 3 sets of 8–12), it's time for one weight step more.
 // Only for exercises with a weight, and only when you did all the sets.
 function readyToGoUp(sets, step, exercise) {
-  if (step.seconds || !usesWeight(exercise)) return false;
+  if (step.seconds || exercise.equipment === "mat") return false;
   if (sets.length < step.sets) return false;
   return sets.every((s) => s.weightKg != null && s.reps >= step.reps[1]);
 }
@@ -96,27 +96,7 @@ const DEFAULT_STEP = { machine: 5, cable: 2.5, dumbbell: 2 };
 const DEFAULT_START = { machine: 20, cable: 10, dumbbell: 4 };
 
 function usesWeight(ex) {
-  return ex.equipment !== "mat" && ex.type !== "swim"; // mat and pool: reps (or lengths) only
-}
-
-// ---------- Swimming ----------
-// A swim step is repeats of a number of pool lengths: in data/workouts.js `sets` is the
-// number of repeats and `reps` the lengths in each. Saved sets also keep the pool length
-// (poolM), so distance is right even if you swim in a different pool later.
-const POOL_LENGTHS = [25, 50, 20, 33];
-
-function isSwim(ex) {
-  return ex.type === "swim";
-}
-
-function poolLength() {
-  return DB.poolLength || 25;
-}
-
-function cyclePoolLength() {
-  DB.poolLength = POOL_LENGTHS[(POOL_LENGTHS.indexOf(poolLength()) + 1) % POOL_LENGTHS.length];
-  saveDB();
-  renderPlayer(true);
+  return ex.equipment !== "mat"; // mat exercises: reps only
 }
 
 function weightStep(ex) {
@@ -188,7 +168,7 @@ function ringFraction(step) {
   if (cur.rest) return Math.max(0, msLeft(cur.rest) / cur.rest.totalMs);
   if (step.seconds) {
     if (!cur.timer || cur.timer.done) return 1;
-    return Math.max(0, msLeft(cur.timer) / (cur.timer.totalMs ?? step.seconds * 1000));
+    return Math.max(0, msLeft(cur.timer) / (step.seconds * 1000));
   }
   return setsDone(step) / step.sets;
 }
@@ -202,9 +182,9 @@ function renderPlayer(keepScroll = false) {
   const ex = getExercise(step.exercise);
 
   if (step.seconds && !cur.timer) {
-    cur.timer = { totalMs: step.seconds * 1000, remainingMs: step.seconds * 1000, endsAt: null, done: false };
+    cur.timer = { remainingMs: step.seconds * 1000, endsAt: null, done: false };
   }
-  const body = step.seconds ? cardioBlock(step, ex) : setsBlock(step, ex);
+  const body = step.seconds ? timedBlock() : setsBlock(step, ex);
   keepScreenAwake(); // no dimming mid-workout
 
   showScreen(`
@@ -236,11 +216,11 @@ function renderPlayer(keepScroll = false) {
       <p class="target">${targetText(step)}</p>
       ${DB.locations[ex.id] ? `<p class="where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</p>` : ""}
       <p class="cue">${esc(ex.cue)}</p>
-      ${`
+      ${step.seconds ? "" : `
         <button class="swap-btn" data-action="swap" aria-label="Swap this exercise">
           ${icon("swap")} ${step.swappedFrom
             ? `Swapped from ${esc(getExercise(step.swappedFrom).name)} · change`
-            : isSwim(ex) ? "Swap stroke" : "Machine taken? Swap"}
+            : "Machine taken? Swap"}
         </button>`}
       ${body}
     </section>
@@ -258,20 +238,12 @@ function setsBlock(step, ex) {
   const n = currentSetNumber(step);
   const usesSettings = ex.equipment === "machine" || ex.equipment === "cable";
 
-  const swim = isSwim(ex);
-  const unit = swim ? "lengths" : "reps";
-
   // "Last time (Mon 26 Oct): 40 kg × 12 · 40 kg × 11"
-  let lastLine = swim
-    ? "First time: take it easy, and rest at the wall whenever you need to."
-    : "First time: the weight is a light guess. Use − and + until it feels right.";
+  let lastLine = "First time: the weight is a light guess. Use − and + until it feels right.";
   if (last) {
-    // Swims: "4 × 2 lengths (200 m)" when every repeat was the same.
-    const sameSwim = swim && last.sets.every((s) => s.reps === last.sets[0].reps);
-    const sets = sameSwim
-      ? `${last.sets.length} × ${last.sets[0].reps} length${last.sets[0].reps === 1 ? "" : "s"} ` +
-        `(${last.sets.reduce((sum, s) => sum + s.reps * (s.poolM || 25), 0)} m)`
-      : last.sets.map(setText).join(" · ");
+    const sets = last.sets
+      .map((s) => (s.weightKg != null ? `${s.weightKg} kg × ${s.reps}` : `${s.reps} reps`))
+      .join(" · ");
     lastLine = `<strong>Last time</strong> (${formatDate(last.date)}): ${sets}`;
   }
 
@@ -281,7 +253,7 @@ function setsBlock(step, ex) {
     card = `
       <div class="set-card all-done">
         ${icon("circle-check")}
-        <p><strong>All ${step.sets} ${swim ? "repeats" : "sets"} done.</strong> Tap ${icon("check")} below for the next exercise.</p>
+        <p><strong>All ${step.sets} sets done.</strong> Tap ${icon("check")} below for the next exercise.</p>
       </div>`;
   } else {
     const draft = draftFor(step, ex, n);
@@ -294,14 +266,10 @@ function setsBlock(step, ex) {
     }
     card = `
       <div class="set-card">
-        <p class="eyebrow">${swim ? "Repeat" : "Set"} ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
+        <p class="eyebrow">Set ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
         ${note}
         ${usesWeight(ex) ? stepper("weight", draft.weight, "kg", n) : ""}
-        ${stepper("reps", draft.reps, unit, n)}
-        ${swim ? `
-          <button class="step-size" data-action="cycle-pool">
-            ${esc(draft.reps)} × ${poolLength()} m = <strong>${(parseInt(draft.reps, 10) || 0) * poolLength()} m</strong>
-            · pool ${poolLength()} m · change</button>` : ""}
+        ${stepper("reps", draft.reps, "reps", n)}
         ${usesWeight(ex) ? `
           <button class="step-size" data-action="cycle-step" data-exercise="${ex.id}">
             − / + changes the weight by <strong>${weightStep(ex)} kg</strong> · change</button>` : ""}
@@ -317,11 +285,11 @@ function setsBlock(step, ex) {
   for (let s = 1; s <= step.sets; s++) {
     const logged = done.find((log) => log.set === s);
     if (logged) {
-      const label = logged.weightKg != null ? `${logged.weightKg}×${logged.reps}` : `${logged.reps} ${unit}`;
+      const label = logged.weightKg != null ? `${logged.weightKg}×${logged.reps}` : `${logged.reps} reps`;
       chips.push(`<button class="chip-set done" data-action="edit-set" data-set="${s}"
         aria-label="Set ${s}: ${label}. Tap to change">${icon("check")} ${label}</button>`);
     } else {
-      chips.push(`<span class="chip-set ${s === n ? "current" : ""}">${swim ? "Repeat" : "Set"} ${s}</span>`);
+      chips.push(`<span class="chip-set ${s === n ? "current" : ""}">Set ${s}</span>`);
     }
   }
 
@@ -360,121 +328,14 @@ function stepper(field, value, unit, n) {
     </div>`;
 }
 
-// ---------- Cardio: a countdown plus what you can note for the machine ----------
-
-// The numbers you can note per machine (which ones: `metrics` in data/exercises.js).
-const CARDIO_METRICS = {
-  level:    { label: "Level",    unit: "",     step: 1,   min: 1,   start: 4 },
-  speed:    { label: "Speed",    unit: "km/h", step: 0.5, min: 0.5, start: 5 },
-  incline:  { label: "Incline",  unit: "%",    step: 1,   min: 0,   start: 3 },
-  distance: { label: "Distance", unit: "km",   step: 0.1, min: 0,   start: 0 },
-};
-
-// The last time you did this cardio exercise (with any numbers you noted).
-function lastCardio(exerciseId) {
-  const logs = DB.logs.filter((l) => l.exerciseId === exerciseId && l.seconds && l.sessionId !== DB.current?.sessionId);
-  return logs.length ? logs.reduce((a, b) => (b.at > a.at ? b : a)) : null;
-}
-
-// "12 min · level 6 · 1.5 km"
-function cardioText(log) {
-  const parts = [formatDuration(Math.round(log.seconds / 60) * 60 || log.seconds)];
-  const c = log.cardio || {};
-  if (c.level != null) parts.push(`level ${c.level}`);
-  if (c.speed != null) parts.push(`${c.speed} km/h`);
-  if (c.incline != null) parts.push(`${c.incline}% incline`);
-  if (c.distance) parts.push(`${c.distance} km`);
-  return parts.join(" · ");
-}
-
-// The numbers on screen for this cardio step, pre-filled from last time
-// (except distance, which is what you read off the machine at the end).
-function cardioDraft(ex) {
-  const key = `${DB.current.step}-cardio`;
-  if (!DB.current.drafts[key]) {
-    const last = lastCardio(ex.id)?.cardio || {};
-    const draft = {};
-    for (const m of ex.metrics || []) draft[m] = m === "distance" ? 0 : last[m] ?? CARDIO_METRICS[m].start;
-    DB.current.drafts[key] = draft;
-  }
-  return DB.current.drafts[key];
-}
-
-function cardioBlock(step, ex) {
+// Timed exercises (the bike): a big countdown. Start/pause is the middle button below.
+function timedBlock() {
   const t = DB.current.timer;
-  const notStarted = !t.done && !t.endsAt && t.remainingMs === t.totalMs;
-  const last = lastCardio(ex.id);
-  const draft = cardioDraft(ex);
-  const saved = t.done ? setsThisSession(DB.current.sessionId, ex.id)[0] : null;
-
-  let controls = "";
-  if (notStarted) {
-    controls = `
-      <div class="time-adjust">
-        <button class="small-btn" data-action="timer-adjust" data-dir="-1" aria-label="One minute less">− 1 min</button>
-        <span class="muted">Tap ${icon("play")} to start</span>
-        <button class="small-btn" data-action="timer-adjust" data-dir="1" aria-label="One minute more">+ 1 min</button>
-      </div>`;
-  } else if (!t.done) {
-    controls = `<button class="small-btn" data-action="finish-timer">${icon("check")} Finish now and save</button>`;
-  }
-
-  const metrics = !t.done && ex.metrics?.length ? `
-    <div class="set-card cardio-card">
-      <p class="eyebrow">Note as you go (optional)</p>
-      ${ex.metrics.map((m) => {
-        const def = CARDIO_METRICS[m];
-        return `
-          <div class="cardio-row">
-            <span class="cardio-label">${def.label}</span>
-            <button class="step-btn small" data-action="adjust" data-field="cardio-${m}" data-dir="-1" aria-label="Less ${def.label}">−</button>
-            <label class="step-value small">
-              <input type="text" inputmode="decimal" data-field="cardio-${m}" value="${esc(draft[m])}" aria-label="${def.label}">
-              <span>${def.unit}</span>
-            </label>
-            <button class="step-btn small" data-action="adjust" data-field="cardio-${m}" data-dir="1" aria-label="More ${def.label}">+</button>
-          </div>`;
-      }).join("")}
-    </div>` : "";
-
-  const where = `
-    <label class="field">
-      <span>Where is it?</span>
-      <input type="text" data-field="location" data-exercise="${ex.id}"
-        value="${esc(DB.locations[ex.id])}" placeholder="e.g. upstairs, by the windows">
-    </label>`;
-
   return `
     <p class="countdown ${t.done ? "finished" : ""}" data-countdown="timer">
       ${t.done ? "Done" : formatClock(msLeft(t) / 1000)}
     </p>
-    ${saved ? `<p class="set-note">${icon("check")} Saved: ${esc(cardioText(saved))}</p>` : ""}
-    ${controls}
-    ${metrics}
-    <p class="last-time">${last
-      ? `<strong>Last time</strong> (${formatDate(last.date)}): ${esc(cardioText(last))}`
-      : "First time: pick an easy level and settle in."}</p>
-    ${where}`;
-}
-
-// − / + 1 minute before you start.
-function adjustTimer(dir) {
-  const t = DB.current.timer;
-  const minutes = Math.min(90, Math.max(1, Math.round(t.totalMs / 60000) + dir));
-  t.totalMs = t.remainingMs = minutes * 60000;
-  saveDB();
-  renderPlayer(true);
-}
-
-// Stop early and save the time done so far.
-function finishTimer() {
-  const t = DB.current.timer;
-  const doneMs = t.totalMs - Math.max(0, msLeft(t));
-  if (doneMs < 1000) return;
-  DB.current.timer = { ...t, remainingMs: 0, endsAt: null, done: true };
-  logTimed(Math.round(doneMs / 1000));
-  saveDB();
-  renderPlayer(true);
+    ${t.done || t.endsAt ? "" : `<p class="muted">Tap ${icon("play")} to start</p>`}`;
 }
 
 // The bar fixed at the bottom: rest controls (while resting) and ⏮ ▶ ⏭.
@@ -492,8 +353,7 @@ function controlDock(step, isLast) {
       ${icon(cur.timer.endsAt ? "pause" : "play")}</button>`;
   } else if (!stepFinished(step)) {
     // The main button while lifting: save this set (with the numbers on screen).
-    const label = isSwim(getExercise(step.exercise)) ? "Done repeat" : "Done set";
-    middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} ${label}</button>`;
+    middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} Done set</button>`;
   } else {
     // All sets done → a green tick that moves on.
     middle = `<button class="round-btn big go" data-action="next"
@@ -606,8 +466,8 @@ function tickClock() {
   if (cur.timer && cur.timer.endsAt) {
     const left = cur.timer.endsAt - Date.now();
     if (left <= 0) {
-      cur.timer = { ...cur.timer, remainingMs: 0, endsAt: null, done: true };
-      logTimed(Math.round(cur.timer.totalMs / 1000));
+      cur.timer = { remainingMs: 0, endsAt: null, done: true };
+      logTimed();
       saveDB();
       playDing();
       flashScreen();
@@ -622,22 +482,15 @@ function tickClock() {
   if (ring) ring.style.strokeDashoffset = 100 - ringFraction(step) * 100;
 }
 
-// Save a finished cardio exercise: how long, plus any numbers you noted.
-function logTimed(seconds) {
+// A finished timed exercise is saved too, so stats can count it later.
+function logTimed() {
   const cur = DB.current;
   const step = currentStep();
-  const ex = getExercise(step.exercise);
-  const cardio = {};
-  for (const [m, value] of Object.entries(cardioDraft(ex))) {
-    const n = parseFloat(String(value).replace(",", "."));
-    if (Number.isFinite(n) && !(m === "distance" && n === 0)) cardio[m] = n;
-  }
   DB.logs.push({
     id: newId(), sessionId: cur.sessionId, workoutId: cur.workoutId,
     exerciseId: step.exercise, set: 1, weightKg: null, reps: null,
-    seconds, cardio, date: todayISO(), at: Date.now(),
+    seconds: step.seconds, date: todayISO(), at: Date.now(),
   });
-  delete cur.drafts[`${cur.step}-cardio`];
 }
 
 // ---------- Actions (called from js/app.js when you tap) ----------
@@ -666,7 +519,6 @@ function doneSet() {
     exerciseId: step.exercise, set: n,
     weightKg: Number.isFinite(weight) ? weight : null,
     reps, seconds: null, date: todayISO(), at: Date.now(),
-    ...(isSwim(ex) ? { poolM: poolLength() } : {}),
   });
   delete cur.drafts[`${cur.step}-${n}`];
   startRest(step);
@@ -694,17 +546,6 @@ function editSet(setNumber) {
 function adjustValue(field, dir) {
   const step = currentStep();
   const ex = getExercise(step.exercise);
-  if (field.startsWith("cardio-")) {
-    const metric = field.slice(7);
-    const def = CARDIO_METRICS[metric];
-    const draft = cardioDraft(ex);
-    const now = parseFloat(String(draft[metric]).replace(",", ".")) || 0;
-    draft[metric] = Math.max(def.min, roundKg(now + dir * def.step));
-    saveDB();
-    const input = document.querySelector(`.cardio-card input[data-field="${field}"]`);
-    if (input) input.value = draft[metric];
-    return;
-  }
   const n = currentSetNumber(step);
   if (n === null) return;
   const draft = draftFor(step, ex, n);
@@ -723,8 +564,6 @@ function adjustValue(field, dir) {
     input.value = draft[field];
     input.classList.remove("needs-value");
   }
-  const pool = document.querySelector('[data-action="cycle-pool"] strong');
-  if (pool && field === "reps") pool.textContent = `${draft.reps * poolLength()} m`;
 }
 
 // Swap the exercise on screen for another one, for this workout only.
@@ -788,7 +627,7 @@ function goToStep(delta) {
   cur.timer = null; // a fresh timer for the new step...
   const step = stepAt(workout, target, cur.swaps);
   if (step.seconds && setsDone(step) > 0) {
-    cur.timer = { totalMs: 0, remainingMs: 0, endsAt: null, done: true }; // ...unless it's already done
+    cur.timer = { remainingMs: 0, endsAt: null, done: true }; // ...unless it's already done
   }
   saveDB();
   renderPlayer();
@@ -819,8 +658,6 @@ function renderDone(session) {
   const repLogs = logs.filter((log) => log.reps);
   const minutes = Math.max(1, Math.round((Date.now() - session.startedAt) / 60000));
   const kg = repLogs.reduce((sum, log) => sum + (log.weightKg || 0) * log.reps, 0);
-  const cardioMin = Math.round(logs.filter((l) => l.seconds).reduce((sum, l) => sum + l.seconds, 0) / 60);
-  const swimM = logs.filter((l) => l.poolM).reduce((sum, l) => sum + l.reps * l.poolM, 0);
   const steps = workout.steps.map((_, i) => stepAt(workout, i, session.swaps || {}));
 
   // Exercises where today's sets all hit the top of the range: go up next time.
@@ -841,14 +678,8 @@ function renderDone(session) {
 
       <div class="stat-grid">
         <div class="stat"><span class="eyebrow">Time</span><strong>${minutes} min</strong></div>
-        ${repLogs.length || !cardioMin
-          ? `<div class="stat"><span class="eyebrow">${swimM && !kg ? "Repeats" : "Sets"}</span><strong>${repLogs.length}</strong></div>`
-          : `<div class="stat"><span class="eyebrow">Exercises</span><strong>${new Set(logs.map((l) => l.exerciseId)).size}</strong></div>`}
-        ${kg > 0 || (!cardioMin && !swimM)
-          ? `<div class="stat"><span class="eyebrow">Lifted</span><strong>${Math.round(kg)} kg</strong></div>`
-          : swimM
-            ? `<div class="stat"><span class="eyebrow">Swum</span><strong>${swimM} m</strong></div>`
-            : `<div class="stat"><span class="eyebrow">Cardio</span><strong>${cardioMin} min</strong></div>`}
+        <div class="stat"><span class="eyebrow">Sets</span><strong>${repLogs.length}</strong></div>
+        <div class="stat"><span class="eyebrow">Lifted</span><strong>${Math.round(kg)} kg</strong></div>
       </div>
       ${goUp.length ? `
         <div class="nudge done-nudge">

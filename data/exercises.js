@@ -16,10 +16,7 @@
     muscles    Muscles worked, MAIN one first. The first one decides where it shows
                in "Browse by muscle" (see data/groupings.js).
     equipment  "machine", "cable", "dumbbell", "mat" or "cardio".
-    type       "reps" (count sets and reps), "cardio" (a countdown, logged in minutes) or
-               "swim" (repeats of a number of pool lengths; equipment "pool").
-    metrics    Cardio only: what you can note for it, any of "level", "speed" (km/h),
-               "incline" (%) and "distance" (km). Shown as − / + under the timer.
+    type       "reps" (count sets and reps) or "timed" (a countdown).
     cue        One short line shown during the workout.
     howTo      The full instructions, one step per sentence (shown under (i)).
     tips       Optional: short tips, shown under (i).
@@ -36,14 +33,13 @@
 */
 
 const EXERCISES = [
-  // ---------- Cardio ----------
+  // ---------- Warm-up ----------
   {
     id: "bike",
     name: "Exercise bike",
     muscles: ["cardio"],
     equipment: "cardio",
-    type: "cardio",
-    metrics: ["level", "distance"],
+    type: "timed",
     cue: "Easy pace. You should be able to chat.",
     howTo: "Set the seat so your leg is nearly straight at the bottom of each pedal stroke. " +
       "Pick a low resistance and pedal at an easy, steady pace to warm up.",
@@ -54,180 +50,6 @@ const EXERCISES = [
     mistakes: [
       "Seat too low, so your knees come up high.",
       "Going hard: this is only a warm-up.",
-    ],
-  },
-
-  {
-    id: "treadmill-walk",
-    name: "Treadmill",
-    muscles: ["cardio", "glutes"],
-    equipment: "cardio",
-    type: "cardio",
-    metrics: ["speed", "incline", "distance"],
-    cue: "Brisk walk on an incline. Hands off the rails if you can.",
-    howTo: "Step on with the belt stopped and press start. Walk at an easy pace for a minute, " +
-      "then raise the incline and speed until you're breathing harder but can still talk. " +
-      "Lower both for the last minute to cool down.",
-    tips: [
-      "An incline walk is easy on the joints and works your glutes.",
-      "Take normal steps and stay near the front of the belt.",
-    ],
-    mistakes: [
-      "Hanging on to the rails, which takes away most of the work.",
-      "Starting fast instead of warming up first.",
-    ],
-  },
-  {
-    id: "cross-trainer",
-    name: "Cross-trainer",
-    muscles: ["cardio", "quads"],
-    equipment: "cardio",
-    type: "cardio",
-    metrics: ["level", "distance"],
-    cue: "Smooth, steady strides. Push and pull the handles.",
-    howTo: "Step onto the pedals and hold the moving handles. Start striding to wake the machine up, " +
-      "pick a level, then keep a smooth rhythm, pushing and pulling with your arms as your legs move.",
-    tips: [
-      "Push through your heels to use your glutes more.",
-      "Go backwards for a minute to change it up.",
-    ],
-    mistakes: [
-      "Standing on your toes.",
-      "Letting the machine's momentum do the work at a very low level.",
-    ],
-  },
-  {
-    id: "rowing-machine",
-    name: "Rowing machine",
-    muscles: ["cardio", "back"],
-    equipment: "cardio",
-    type: "cardio",
-    metrics: ["level", "distance"],
-    cue: "Legs, then lean back, then arms. Reverse on the way in.",
-    howTo: "Strap your feet in with the strap across the widest part of your foot. Push with your legs " +
-      "first, lean back slightly, then pull the handle to your lower ribs. Come back in the opposite " +
-      "order: arms, then lean forward, then bend your knees.",
-    tips: [
-      "Most of the power comes from your legs.",
-      "Keep the damper (the lever on the fan) around 3 to 5.",
-    ],
-    mistakes: [
-      "Pulling with your arms before your legs have pushed.",
-      "Rounding your back at the front of the stroke.",
-    ],
-  },
-  {
-    id: "stair-climber",
-    name: "Stair climber",
-    muscles: ["cardio", "glutes"],
-    equipment: "cardio",
-    type: "cardio",
-    metrics: ["level"],
-    cue: "Steady steps, upright posture, light hands on the rails.",
-    howTo: "Hold the rails, step on and press start at a low level. Step with your whole foot on each " +
-      "stair, stand tall and keep a steady pace. Raise the level once you're warm.",
-    tips: [
-      "Short sessions are tough: start with 5 to 10 minutes.",
-      "Light hands on the rails, for balance only.",
-    ],
-    mistakes: [
-      "Leaning heavily on the rails.",
-      "Only using your toes on each step.",
-    ],
-  },
-
-  // ---------- Swimming ----------
-  {
-    id: "freestyle",
-    name: "Freestyle",
-    muscles: ["cardio", "shoulders", "back"],
-    equipment: "pool",
-    type: "swim",
-    cue: "Long, relaxed strokes. Breathe to the side every 2 or 3 strokes.",
-    howTo: "Float face down with your body long and flat. Reach forward with one arm at a time, " +
-      "pull the water back past your hip, and kick small and steady from the hips. Turn your " +
-      "head to the side to breathe as that arm comes out of the water.",
-    tips: [
-      "Breathe out under water, so you only breathe in when you turn.",
-      "Slow and smooth beats fast and splashy.",
-    ],
-    mistakes: [
-      "Lifting your head forward to breathe, which drops your legs.",
-      "Big kicks from the knees instead of the hips.",
-    ],
-  },
-  {
-    id: "breaststroke",
-    name: "Breaststroke",
-    muscles: ["cardio", "quads", "chest"],
-    equipment: "pool",
-    type: "swim",
-    cue: "Pull, breathe, kick, glide.",
-    howTo: "Start long and flat with your arms in front. Sweep your hands out and round, lifting " +
-      "your head to breathe. Bring your heels towards you, then kick them out and back together " +
-      "as your arms shoot forward. Glide for a moment before the next stroke.",
-    tips: [
-      "The glide is where the speed is: don't rush it.",
-      "A good stroke to rest on between harder lengths.",
-    ],
-    mistakes: [
-      "Keeping your head up the whole time.",
-      "No glide, so every stroke starts from a standstill.",
-    ],
-  },
-  {
-    id: "backstroke",
-    name: "Backstroke",
-    muscles: ["cardio", "back", "shoulders"],
-    equipment: "pool",
-    type: "swim",
-    cue: "Hips up, ears in the water, arms like a windmill.",
-    howTo: "Lie on your back with your ears in the water and your hips high. Kick steadily from " +
-      "the hips. Lift one straight arm over your head, enter the water little finger first, and " +
-      "push the water down towards your feet. Alternate arms.",
-    tips: [
-      "Look straight up, not at your feet.",
-      "Count your strokes from the flags to the wall, so you don't hit your head.",
-    ],
-    mistakes: [
-      "Sitting in the water with your hips low.",
-      "Bending your knees so they come out of the water.",
-    ],
-  },
-  {
-    id: "kickboard-kick",
-    name: "Kick with a board",
-    muscles: ["cardio", "quads", "glutes"],
-    equipment: "pool",
-    type: "swim",
-    cue: "Hold the board, arms straight, kick from the hips.",
-    howTo: "Hold a kickboard at the far end with straight arms and lie flat on the water. Kick " +
-      "with straight-ish legs from the hips, toes pointed, making small splashes at the surface.",
-    tips: [
-      "Point your toes: floppy ankles make it much slower.",
-      "Put your face in the water between breaths to keep your hips up.",
-    ],
-    mistakes: [
-      "Kicking from the knees, like cycling.",
-      "Big splashy kicks that waste energy.",
-    ],
-  },
-  {
-    id: "pull-buoy",
-    name: "Pull with a buoy",
-    muscles: ["cardio", "back", "shoulders"],
-    equipment: "pool",
-    type: "swim",
-    cue: "Buoy between your thighs, arms only, no kicking.",
-    howTo: "Squeeze a pull buoy between your upper thighs so your legs float. Swim freestyle with " +
-      "your arms only, keeping your legs still and your body long.",
-    tips: [
-      "Great for practising your arm stroke and breathing.",
-      "Keep your stomach tight so your hips don't sway.",
-    ],
-    mistakes: [
-      "Kicking anyway, so the buoy slips out.",
-      "Shortening your stroke: reach long and pull all the way back.",
     ],
   },
 

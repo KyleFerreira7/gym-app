@@ -889,14 +889,3 @@ body.flash::after {
 .danger-outline { color: var(--warning); border-color: var(--warning); }
 .card .danger-btn { min-height: 44px; }
 .info-panel .danger-btn { margin-top: 18px; }
-
-/* ---------- Cardio ---------- */
-.time-adjust { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: -4px; }
-.time-adjust .muted { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
-.time-adjust .icon { width: 14px; height: 14px; fill: currentColor; }
-.cardio-card { gap: 6px; margin-top: 16px; }
-.cardio-row { width: 100%; display: flex; align-items: center; gap: 10px; }
-.cardio-label { width: 78px; flex-shrink: 0; font-weight: 700; color: var(--muted); font-size: 14px; }
-.step-btn.small { width: 48px; height: 48px; font-size: 24px; }
-.step-value.small input { font-size: 26px; width: 3em; }
-.step-value.small span { width: 2.6em; font-size: 14px; }

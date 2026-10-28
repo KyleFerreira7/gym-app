@@ -5,9 +5,7 @@
   exercises: they're filters on the exercise pool and the workouts, so a new
   exercise or workout shows up in the right place automatically.
 
-  MUSCLE_GROUPS  match an exercise's MAIN muscle (the first one in its `muscles` list),
-                 or, for a group with `equipment`, every exercise with that equipment
-                 (Swimming = everything done in the pool).
+  MUSCLE_GROUPS  match an exercise's MAIN muscle (the first one in its `muscles` list).
   WORKOUT_TYPES  match a workout's `tags`.
   `image` is the exercise id whose picture is shown on the tile.
   A group with nothing in it is hidden.
@@ -20,8 +18,6 @@ const MUSCLE_GROUPS = [
   { id: "shoulders", name: "Shoulders", muscles: ["shoulders"], image: "shoulder-press" },
   { id: "arms", name: "Arms", muscles: ["biceps", "triceps"], image: "dumbbell-curl" },
   { id: "core", name: "Core", muscles: ["core"], image: "dead-bug" },
-  { id: "cardio", name: "Cardio", muscles: ["cardio"], image: "treadmill-walk" },
-  { id: "swimming", name: "Swimming", equipment: "pool", image: "freestyle" },
 ];
 
 const WORKOUT_TYPES = [
@@ -29,8 +25,6 @@ const WORKOUT_TYPES = [
   { id: "short", name: "Short", image: "seated-row" },
   { id: "machines", name: "Machines only", image: "leg-extension" },
   { id: "mat", name: "Mat only", image: "bird-dog" },
-  { id: "cardio", name: "Cardio", image: "treadmill-walk" },
-  { id: "swim", name: "Swimming", image: "freestyle" },
 ];
 
 // How each muscle in data/exercises.js is shown on the exercise info sheet.
