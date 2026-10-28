@@ -19,6 +19,8 @@
     type       "reps" (count sets and reps) or "timed" (a countdown).
     cue        One short line shown during the workout.
     howTo      The full instructions (shown when you tap "How to").
+    startKg    Optional: the weight to suggest the very first time (otherwise a light
+               default for the equipment: machine 20, cable 10, dumbbell 4 kg).
 
   Note: this file is plain JavaScript, so text goes in "quotes" and every
   entry ends with a comma.

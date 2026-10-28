@@ -117,9 +117,12 @@ async function importData(file) {
   DB.logs.sort((a, b) => a.at - b.at);
   DB.sessions.sort((a, b) => (a.finishedAt ?? 0) - (b.finishedAt ?? 0));
 
-  // Machine settings: fill in any exercise that has none here yet.
+  // Machine settings and weight steps: fill in any exercise that has none here yet.
   for (const [exerciseId, note] of Object.entries(data.machineSettings || {})) {
     if (!DB.machineSettings[exerciseId]) DB.machineSettings[exerciseId] = note;
+  }
+  for (const [exerciseId, kg] of Object.entries(data.weightSteps || {})) {
+    if (DB.weightSteps[exerciseId] == null) DB.weightSteps[exerciseId] = kg;
   }
   saveDB();
 

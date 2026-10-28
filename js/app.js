@@ -33,7 +33,13 @@ appEl.addEventListener("click", (event) => {
     case "quit":           return quitWorkout();
     case "next":           return goToStep(+1);
     case "prev":           return goToStep(-1);
-    case "toggle-set":     return toggleSet(Number(el.dataset.set));
+    case "done-set":       return doneSet();
+    case "edit-set":       return editSet(Number(el.dataset.set));
+    case "cycle-step":     return cycleWeightStep(el.dataset.exercise);
+    case "adjust":
+      // Taps and holds are handled on "pointerdown" below; this is for keyboards.
+      if (event.detail === 0) adjustValue(el.dataset.field, Number(el.dataset.dir));
+      return;
     case "toggle-warmup":  return toggleWarmUp();
     case "toggle-timer":   return toggleTimer();
     case "toggle-rest":    return toggleRest();
@@ -57,6 +63,27 @@ appEl.addEventListener("input", (event) => {
   }
   saveDB();
 });
+
+// − / + buttons: change once straight away, then keep going while held down
+// (after a short pause), like holding a key.
+let holdTimer = null;
+appEl.addEventListener("pointerdown", (event) => {
+  const el = event.target.closest('[data-action="adjust"]');
+  if (!el) return;
+  event.preventDefault(); // no text selection or keyboard popping up
+  unlockSound();
+  const field = el.dataset.field;
+  const dir = Number(el.dataset.dir);
+  adjustValue(field, dir);
+  const repeat = () => {
+    adjustValue(field, dir);
+    holdTimer = setTimeout(repeat, 130);
+  };
+  holdTimer = setTimeout(repeat, 450);
+});
+const stopHold = () => clearTimeout(holdTimer);
+["pointerup", "pointercancel", "pointerout"].forEach((type) => appEl.addEventListener(type, stopHold));
+window.addEventListener("blur", stopHold);
 
 // "Load a backup": a file was picked.
 appEl.addEventListener("change", (event) => {

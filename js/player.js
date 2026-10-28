@@ -74,6 +74,71 @@ function readyToGoUp(sets, step, exercise) {
   return sets.every((s) => s.weightKg != null && s.reps >= step.reps[1]);
 }
 
+// ---------- Pre-filled numbers ----------
+
+// How much one tap of − / + changes the weight, per exercise. You can change it
+// on the exercise screen ("Step: 5 kg") and it's remembered in DB.weightSteps.
+const STEP_OPTIONS = [1, 2, 2.5, 5];
+const DEFAULT_STEP = { machine: 5, cable: 2.5, dumbbell: 2 };
+// A light weight to start from the first time (change it with − / +).
+// An exercise in data/exercises.js can set its own with `startKg: 20`.
+const DEFAULT_START = { machine: 20, cable: 10, dumbbell: 4 };
+
+function usesWeight(ex) {
+  return ex.equipment !== "mat"; // mat exercises: reps only
+}
+
+function weightStep(ex) {
+  return DB.weightSteps[ex.id] ?? DEFAULT_STEP[ex.equipment] ?? 2.5;
+}
+
+// The set you're about to do: the first one not done yet (null when all are done).
+function currentSetNumber(step) {
+  const done = setsThisSession(DB.current.sessionId, step.exercise).map((log) => log.set);
+  for (let n = 1; n <= step.sets; n++) if (!done.includes(n)) return n;
+  return null;
+}
+
+// What to pre-fill for set n, and why. In order:
+//   1. later sets today: the weight you just used
+//   2. last time: the same numbers, or one weight step more if you hit the
+//      top of the range on every set (the plan's rule), starting at the bottom of the range
+//   3. first time: a light starting weight and the top of the range
+function suggestSet(step, ex, n) {
+  const today = setsThisSession(DB.current.sessionId, ex.id).sort((a, b) => b.set - a.set)[0];
+  const last = lastTimeFor(ex.id, DB.current.sessionId);
+  const lastSame = last?.sets.find((s) => s.set === n) || last?.sets[last.sets.length - 1];
+  const top = step.reps[1];
+
+  if (!usesWeight(ex)) {
+    return { weight: null, reps: today?.reps ?? lastSame?.reps ?? top };
+  }
+  if (today) {
+    return { weight: today.weightKg, reps: lastSame?.reps ?? top };
+  }
+  if (last && readyToGoUp(last.sets, step, ex)) {
+    const heaviest = Math.max(...last.sets.map((s) => s.weightKg));
+    return { weight: roundKg(heaviest + weightStep(ex)), reps: step.reps[0], goUpFrom: heaviest };
+  }
+  if (lastSame) {
+    return { weight: lastSame.weightKg, reps: lastSame.reps };
+  }
+  return { weight: ex.startKg ?? DEFAULT_START[ex.equipment] ?? 5, reps: top, firstTime: true };
+}
+
+// The numbers for the set on screen, kept in DB.current.drafts so they survive
+// a locked phone. Created from suggestSet() the first time they're needed.
+function draftFor(step, ex, n) {
+  const key = `${DB.current.step}-${n}`;
+  if (!DB.current.drafts[key]) DB.current.drafts[key] = suggestSet(step, ex, n);
+  return DB.current.drafts[key];
+}
+
+// 42.499999 → 42.5
+function roundKg(kg) {
+  return Math.round(kg * 100) / 100;
+}
+
 // Milliseconds left on a countdown that may be running or paused.
 function msLeft(clock) {
   return clock.endsAt ? clock.endsAt - Date.now() : clock.remainingMs;
@@ -139,21 +204,64 @@ function renderPlayer(keepScroll = false) {
   `, keepScroll);
 }
 
-// Sets × reps exercises: last time, machine settings, and one row per set.
+// Sets × reps exercises: one card for the set you're about to do, with − / +
+// steppers, pre-filled. Done sets shrink to chips underneath (tap one to fix it).
 function setsBlock(step, ex) {
   const cur = DB.current;
   const last = lastTimeFor(ex.id, cur.sessionId);
   const done = setsThisSession(cur.sessionId, ex.id);
-  const usesWeight = ex.equipment !== "mat";   // bodyweight exercises: reps only
+  const n = currentSetNumber(step);
   const usesSettings = ex.equipment === "machine" || ex.equipment === "cable";
 
   // "Last time (Mon 26 Oct): 40 kg × 12 · 40 kg × 11"
-  let lastLine = "First time: pick a weight that feels light, and see how it goes.";
+  let lastLine = "First time: the weight is a light guess. Use − and + until it feels right.";
   if (last) {
     const sets = last.sets
       .map((s) => (s.weightKg != null ? `${s.weightKg} kg × ${s.reps}` : `${s.reps} reps`))
       .join(" · ");
     lastLine = `<strong>Last time</strong> (${formatDate(last.date)}): ${sets}`;
+  }
+
+  // The card: the current set's steppers, or "all done".
+  let card;
+  if (n === null) {
+    card = `
+      <div class="set-card all-done">
+        ${icon("circle-check")}
+        <p><strong>All ${step.sets} sets done.</strong> Tap ${icon("check")} below for the next exercise.</p>
+      </div>`;
+  } else {
+    const draft = draftFor(step, ex, n);
+    const note = draft.goUpFrom != null && done.length === 0 ? `
+      <p class="set-note">${icon("trending-up")} Up ${roundKg(draft.weight - draft.goUpFrom)} kg from last time:
+        you hit ${step.reps[1]} on every set.</p>` : "";
+    card = `
+      <div class="set-card">
+        <p class="eyebrow">Set ${n} of ${step.sets}${step.eachSide ? " · reps each side" : ""}</p>
+        ${note}
+        ${usesWeight(ex) ? stepper("weight", draft.weight, "kg", n) : ""}
+        ${stepper("reps", draft.reps, "reps", n)}
+        ${usesWeight(ex) ? `
+          <button class="step-size" data-action="cycle-step" data-exercise="${ex.id}">
+            − / + changes the weight by <strong>${weightStep(ex)} kg</strong> · change</button>` : ""}
+      </div>`;
+  }
+
+  // Chips: warm-up, then one per set (done ✓, current ●, still to do ○).
+  const chips = [];
+  if (step.warmUp) {
+    chips.push(`<button class="chip-set ${cur.warmUps[cur.step] ? "done" : ""}" data-action="toggle-warmup"
+      aria-pressed="${Boolean(cur.warmUps[cur.step])}">${cur.warmUps[cur.step] ? icon("check") : ""} Warm-up</button>`);
+  }
+  for (let s = 1; s <= step.sets; s++) {
+    const logged = done.find((log) => log.set === s);
+    if (logged) {
+      const label = logged.weightKg != null ? `${logged.weightKg}×${logged.reps}` : `${logged.reps} reps`;
+      chips.push(`<button class="chip-set done" data-action="edit-set" data-set="${s}"
+        aria-label="Set ${s}: ${label}. Tap to change">${icon("check")} ${label}</button>`);
+    } else {
+      chips.push(`<span class="chip-set ${s === n ? "current" : ""}">Set ${s}</span>`);
+    }
   }
 
   const settings = usesSettings ? `
@@ -163,58 +271,25 @@ function setsBlock(step, ex) {
         value="${esc(DB.machineSettings[ex.id])}" placeholder="e.g. seat 4, back pad 2">
     </label>` : "";
 
-  const warmUp = step.warmUp ? `
-    <div class="set-row warmup ${cur.warmUps[cur.step] ? "done" : ""}">
-      <span class="set-num">W</span>
-      <span class="set-label">Light warm-up set</span>
-      <button class="tick" data-action="toggle-warmup" aria-label="Warm-up set done">${icon("check")}</button>
-    </div>` : "";
-
-  let rows = "";
-  for (let n = 1; n <= step.sets; n++) {
-    const logged = done.find((log) => log.set === n);
-    // What to show in the boxes: what you ticked, else what you typed, else last time's
-    // numbers, else (for the weight) the set you just did today.
-    const draft = cur.drafts[`${cur.step}-${n}`] || {};
-    const prev = last?.sets.find((s) => s.set === n) || last?.sets[last.sets.length - 1];
-    const earlierToday = done.filter((log) => log.set < n).sort((a, b) => b.set - a.set)[0];
-    const weight = logged ? logged.weightKg
-      : draft.weight ?? prev?.weightKg ?? earlierToday?.weightKg ?? "";
-    const reps = logged ? logged.reps : draft.reps ?? prev?.reps ?? "";
-
-    rows += `
-      <div class="set-row ${logged ? "done" : ""}">
-        <span class="set-num">${n}</span>
-        ${usesWeight ? `
-          <label class="num-input">
-            <input type="text" inputmode="decimal" data-field="weight" data-set="${n}"
-              value="${esc(weight)}" placeholder="–" ${logged ? "disabled" : ""}>
-            <span>kg</span>
-          </label>` : ""}
-        <label class="num-input">
-          <input type="text" inputmode="numeric" data-field="reps" data-set="${n}"
-            value="${esc(reps)}" placeholder="–" ${logged ? "disabled" : ""}>
-          <span>reps</span>
-        </label>
-        <button class="tick" data-action="toggle-set" data-set="${n}" aria-label="Set ${n} done">
-          ${icon("check")}
-        </button>
-      </div>`;
-  }
-
-  // "Go up" nudge: last time you hit the top of the range on every set.
-  const nudge = last && readyToGoUp(last.sets, step, ex) ? `
-    <div class="nudge">
-      ${icon("trending-up")}
-      <p><strong>Time to go up.</strong> Last time you hit ${step.reps[1]} on every set
-      at ${Math.max(...last.sets.map((s) => s.weightKg))} kg. Try one weight step more today.</p>
-    </div>` : "";
-
   return `
-    ${nudge}
+    ${card}
+    <div class="chip-row">${chips.join("")}</div>
     <p class="last-time">${lastLine}</p>
-    ${settings}
-    <div class="sets">${warmUp}${rows}</div>`;
+    ${settings}`;
+}
+
+// One − [value] + row. The value is also a box you can tap to type an exact number.
+function stepper(field, value, unit, n) {
+  return `
+    <div class="stepper">
+      <button class="step-btn" data-action="adjust" data-field="${field}" data-dir="-1" aria-label="Less ${unit}">−</button>
+      <label class="step-value">
+        <input type="text" inputmode="${field === "weight" ? "decimal" : "numeric"}"
+          data-field="${field}" data-set="${n}" value="${esc(value)}" aria-label="${unit}">
+        <span>${unit}</span>
+      </label>
+      <button class="step-btn" data-action="adjust" data-field="${field}" data-dir="1" aria-label="More ${unit}">+</button>
+    </div>`;
 }
 
 // Timed exercises (the bike): a big countdown. Start/pause is the middle button below.
@@ -240,10 +315,12 @@ function controlDock(step, isLast) {
   } else if (step.seconds && !cur.timer.done) {
     middle = `<button class="round-btn big" data-action="toggle-timer" aria-label="${cur.timer.endsAt ? "Pause" : "Start"}">
       ${icon(cur.timer.endsAt ? "pause" : "play")}</button>`;
+  } else if (!stepFinished(step)) {
+    // The main button while lifting: save this set (with the numbers on screen).
+    middle = `<button class="done-set-btn" data-action="done-set">${icon("check")} Done set</button>`;
   } else {
-    // All sets done → a green tick that moves on. Not done yet → greyed out.
-    const ready = stepFinished(step);
-    middle = `<button class="round-btn big ${ready ? "go" : ""}" data-action="next" ${ready ? "" : "disabled"}
+    // All sets done → a green tick that moves on.
+    middle = `<button class="round-btn big go" data-action="next"
       aria-label="${isLast ? "Finish workout" : "Next exercise"}">${icon("check")}</button>`;
   }
 
@@ -276,10 +353,11 @@ function controlDock(step, isLast) {
 
 // ---------- Rest between sets ----------
 
-function startRest(step, setNumber) {
+function startRest(step) {
   const workout = getWorkout(DB.current.workoutId);
   const seconds = step.rest ?? workout.rest;
-  const lastSet = setNumber >= step.sets;
+  const nextSet = currentSetNumber(step);
+  const lastSet = nextSet === null; // that was the final set of this exercise
   const nextStep = workout.steps[DB.current.step + 1];
 
   // After the final set of the final exercise there's nothing to rest for.
@@ -290,7 +368,7 @@ function startRest(step, setNumber) {
     remainingMs: seconds * 1000,
     totalMs: seconds * 1000,
     advance: lastSet, // when this rest ends, move on to the next exercise
-    nextLabel: lastSet ? getExercise(nextStep.exercise).name : `set ${setNumber + 1} of ${step.sets}`,
+    nextLabel: lastSet ? getExercise(nextStep.exercise).name : `set ${nextSet} of ${step.sets}`,
   };
 }
 
@@ -378,43 +456,82 @@ function logTimed() {
 
 // ---------- Actions (called from js/app.js when you tap) ----------
 
-function toggleSet(setNumber) {
+// "Done set": save the set on screen with its numbers, then rest.
+function doneSet() {
   const cur = DB.current;
   const step = currentStep();
-  const already = DB.logs.find(
-    (log) => log.sessionId === cur.sessionId && log.exerciseId === step.exercise && log.set === setNumber
-  );
+  const ex = getExercise(step.exercise);
+  const n = currentSetNumber(step);
+  if (n === null) return;
 
-  if (already) {
-    // Tapping a ticked set un-ticks it (and removes it from the history).
-    DB.logs = DB.logs.filter((log) => log !== already);
-    cur.drafts[`${cur.step}-${setNumber}`] = { weight: already.weightKg ?? "", reps: already.reps };
-    saveDB();
-    renderPlayer(true);
-    return;
-  }
-
-  // Read the numbers typed in this set's row. Commas work too ("22,5").
-  const weightEl = document.querySelector(`[data-field="weight"][data-set="${setNumber}"]`);
-  const repsEl = document.querySelector(`[data-field="reps"][data-set="${setNumber}"]`);
-  const weight = weightEl ? parseFloat(weightEl.value.replace(",", ".")) : null;
-  const reps = parseInt(repsEl.value, 10);
-
+  const draft = draftFor(step, ex, n);
+  const weight = usesWeight(ex) ? parseFloat(String(draft.weight).replace(",", ".")) : null;
+  const reps = parseInt(draft.reps, 10);
   if (!(reps > 0)) {
-    // No reps typed: highlight the box and wait.
-    repsEl.classList.add("needs-value");
-    repsEl.focus();
+    // No reps: highlight the box and wait.
+    const repsEl = document.querySelector('.set-card input[data-field="reps"]');
+    repsEl?.classList.add("needs-value");
+    repsEl?.focus();
     return;
   }
 
   DB.logs.push({
     id: newId(), sessionId: cur.sessionId, workoutId: cur.workoutId,
-    exerciseId: step.exercise, set: setNumber,
+    exerciseId: step.exercise, set: n,
     weightKg: Number.isFinite(weight) ? weight : null,
     reps, seconds: null, date: todayISO(), at: Date.now(),
   });
-  delete cur.drafts[`${cur.step}-${setNumber}`];
-  startRest(step, setNumber);
+  delete cur.drafts[`${cur.step}-${n}`];
+  startRest(step);
+  saveDB();
+  renderPlayer(true);
+}
+
+// Tapping a done set's chip takes it back, so you can fix its numbers.
+function editSet(setNumber) {
+  const cur = DB.current;
+  const step = currentStep();
+  const logged = DB.logs.find(
+    (log) => log.sessionId === cur.sessionId && log.exerciseId === step.exercise && log.set === setNumber
+  );
+  if (!logged) return;
+  DB.logs = DB.logs.filter((log) => log !== logged);
+  cur.drafts[`${cur.step}-${setNumber}`] = { weight: logged.weightKg, reps: logged.reps };
+  cur.rest = null;
+  saveDB();
+  renderPlayer(true);
+}
+
+// − / + on the set card. Changes the number in place (no redraw), so holding
+// the button down to repeat stays smooth.
+function adjustValue(field, dir) {
+  const step = currentStep();
+  const ex = getExercise(step.exercise);
+  const n = currentSetNumber(step);
+  if (n === null) return;
+  const draft = draftFor(step, ex, n);
+
+  if (field === "weight") {
+    const now = parseFloat(String(draft.weight).replace(",", ".")) || 0;
+    draft.weight = Math.max(0, roundKg(now + dir * weightStep(ex)));
+  } else {
+    const now = parseInt(draft.reps, 10) || 0;
+    draft.reps = Math.min(99, Math.max(1, now + dir));
+  }
+  saveDB();
+
+  const input = document.querySelector(`.set-card input[data-field="${field}"]`);
+  if (input) {
+    input.value = draft[field];
+    input.classList.remove("needs-value");
+  }
+}
+
+// "change" next to the step size: 1 → 2 → 2.5 → 5 → 1 kg ...
+function cycleWeightStep(exerciseId) {
+  const ex = getExercise(exerciseId);
+  const index = STEP_OPTIONS.indexOf(weightStep(ex));
+  DB.weightSteps[exerciseId] = STEP_OPTIONS[(index + 1) % STEP_OPTIONS.length];
   saveDB();
   renderPlayer(true);
 }

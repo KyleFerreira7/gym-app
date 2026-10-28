@@ -16,6 +16,7 @@
     sessions         Every workout you finished:
                      { id, workoutId, date, startedAt, finishedAt, completed }
     machineSettings  Your notes per exercise, e.g. { "leg-press": "Seat 5" }
+    weightSteps      How much − / + changes the weight, per exercise, e.g. { "leg-press": 5 }
     activePlanId     The plan whose next workout Home suggests (data/plans.js).
     lastBackupAt     When you last saved a backup file (timestamp), for the reminder.
     current          The workout in progress (null when there isn't one).
@@ -26,7 +27,7 @@ const STORAGE_KEY = "gym-app";
 
 function emptyDB() {
   return {
-    version: 2, logs: [], sessions: [], machineSettings: {}, current: null,
+    version: 2, logs: [], sessions: [], machineSettings: {}, weightSteps: {}, current: null,
     activePlanId: PLANS[0].id, lastBackupAt: null,
   };
 }
