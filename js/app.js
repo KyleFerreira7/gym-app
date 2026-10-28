@@ -33,6 +33,7 @@ appEl.addEventListener("click", (event) => {
     case "quit":           return quitWorkout();
     case "next":           return goToStep(+1);
     case "prev":           return goToStep(-1);
+    case "info":           return showInfo(id);
     case "done-set":       return doneSet();
     case "edit-set":       return editSet(Number(el.dataset.set));
     case "cycle-step":     return cycleWeightStep(el.dataset.exercise);

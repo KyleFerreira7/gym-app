@@ -190,13 +190,13 @@ function renderPlayer(keepScroll = false) {
             style="stroke-dashoffset:${100 - ringFraction(step) * 100}"/>
         </svg>
       </div>
-      <h2 class="exercise-name">${esc(ex.name)}</h2>
+      <div class="name-row">
+        <h2 class="exercise-name">${esc(ex.name)}</h2>
+        <button class="info-btn" data-action="info" data-id="${ex.id}" aria-label="How to do ${esc(ex.name)}">
+          ${icon("info")}</button>
+      </div>
       <p class="target">${targetText(step)}</p>
       <p class="cue">${esc(ex.cue)}</p>
-      <details class="howto">
-        <summary>How to ${icon("chevron-down")}</summary>
-        <p>${esc(ex.howTo)}</p>
-      </details>
       ${body}
     </section>
 

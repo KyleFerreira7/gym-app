@@ -276,24 +276,71 @@ button:disabled { opacity: 0.35; cursor: default; }
   transition: stroke-dashoffset 0.3s linear;
 }
 .resting .ring-fill { stroke: var(--rest); }
-.exercise-name { margin: 18px 0 0; font-size: 28px; letter-spacing: -0.01em; }
+.exercise-name { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
 .target { margin: 2px 0 0; font-size: 20px; font-weight: 600; color: var(--accent); }
 .cue { margin: 8px 0 0; text-align: center; color: var(--muted); }
 
-.howto { width: 100%; margin-top: 4px; text-align: center; }
-.howto summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  font-weight: 600;
-  list-style: none;
-  cursor: pointer;
+/* Exercise name with the small (i) button next to it. */
+.name-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 18px; }
+.name-row .exercise-name { margin: 0; }
+.info-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-right: -44px; /* keep the name itself centred */
+  color: var(--muted);
 }
-.howto summary::-webkit-details-marker { display: none; }
-.howto summary .icon { width: 18px; height: 18px; transition: transform 0.2s; }
-.howto[open] summary .icon { transform: rotate(180deg); }
-.howto p { margin: 0 0 8px; text-align: left; padding: 14px 16px; background: var(--surface); border-radius: var(--radius-small); }
+.info-btn .icon { width: 24px; height: 24px; }
+
+/* The exercise info sheet. */
+.info-sheet { position: fixed; inset: 0; z-index: 50; }
+.info-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); animation: fade-in 0.2s; }
+.info-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  max-height: 88vh;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 4px var(--gutter) calc(28px + env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sheet-up 0.25s ease-out;
+}
+.info-panel .topbar { width: 100%; }
+.info-art { width: min(56vw, 220px); aspect-ratio: 1; object-fit: cover; border-radius: 32px; margin-top: 18px; background: var(--line); }
+.info-steps { align-self: stretch; margin: 16px 0 0; padding: 0; list-style: none; counter-reset: step; }
+.info-steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 12px 14px 12px 52px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.info-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 14px;
+  top: 11px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 800;
+}
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
 
 .last-time {
   width: 100%;

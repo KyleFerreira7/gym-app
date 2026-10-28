@@ -175,6 +175,41 @@ function tabBar(active) {
   return `<nav class="tab-bar">${tab("home", "Home", "house")}${tab("me", "Me", "user")}</nav>`;
 }
 
+// ---------- Exercise info (the (i) button) ----------
+// A sheet that slides up over the workout with the picture and numbered steps.
+// It sits outside the main screen, so timers carry on underneath and a redraw
+// of the workout (e.g. when rest ends) doesn't close it.
+
+function showInfo(exerciseId) {
+  const ex = getExercise(exerciseId);
+  // The how-to text, one sentence per numbered step.
+  const steps = ex.howTo.split(/(?<=\.)\s+/).filter(Boolean);
+
+  const sheet = document.createElement("div");
+  sheet.className = "info-sheet";
+  sheet.innerHTML = `
+    <div class="info-backdrop" data-close></div>
+    <section class="info-panel" role="dialog" aria-modal="true" aria-label="${esc(ex.name)}">
+      <header class="topbar">
+        <span class="icon-btn"></span>
+        <h1>${esc(ex.name)}</h1>
+        <button class="icon-btn" data-close aria-label="Close">${icon("x")}</button>
+      </header>
+      ${exerciseImage(ex.id, "info-art")}
+      <p class="cue">${esc(ex.cue)}</p>
+      <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+    </section>`;
+
+  const close = () => {
+    sheet.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (event) => { if (event.key === "Escape") close(); };
+  sheet.addEventListener("click", (event) => { if (event.target.closest("[data-close]")) close(); });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(sheet);
+}
+
 // The bar at the top of the browse screens.
 function topbar(title, closeAction = "back") {
   return `
