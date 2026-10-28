@@ -14,6 +14,7 @@
   --accent-text: #ffffff;
   --accent-soft: #e2ede6; /* ticked sets */
   --warning: #c2572f;
+  --rest: #c08a2d;        /* the line around the picture while resting */
 
   --radius: 22px;
   --radius-small: 14px;
@@ -129,7 +130,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 }
 .carousel::-webkit-scrollbar { display: none; }
 
-.routine-card {
+.workout-card {
   flex: 0 0 86%;
   scroll-snap-align: center;
   display: flex;
@@ -203,7 +204,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 .step-target { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* A bar fixed to the bottom of the screen, for the main button. */
-.bottom-bar, .player-nav {
+.bottom-bar, .dock {
   position: fixed;
   left: 0;
   right: 0;
@@ -220,13 +221,39 @@ button:disabled { opacity: 0.35; cursor: default; }
 
 .player { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
 
-.player-art {
+/* The picture, with the progress line drawn just outside its edge. */
+.art-wrap {
+  position: relative;
   width: min(54vw, 230px);
   aspect-ratio: 1;
+}
+.player-art {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 36px;
   background: var(--line);
 }
+.ring {
+  position: absolute;
+  inset: -9px;
+  width: calc(100% + 18px);
+  height: calc(100% + 18px);
+  overflow: visible;
+  pointer-events: none;
+}
+.ring rect, .ring path {
+  fill: none;
+  stroke-width: 2.2; /* in the drawing's own units: about 5px on a phone */
+  stroke-linecap: round;
+}
+.ring-track { stroke: var(--line); }
+.ring-fill {
+  stroke: var(--accent);
+  stroke-dasharray: 100;
+  transition: stroke-dashoffset 0.3s linear;
+}
+.resting .ring-fill { stroke: var(--rest); }
 .exercise-name { margin: 18px 0 0; font-size: 28px; letter-spacing: -0.01em; }
 .target { margin: 2px 0 0; font-size: 20px; font-weight: 600; color: var(--accent); }
 .cue { margin: 8px 0 0; text-align: center; color: var(--muted); }
@@ -326,38 +353,7 @@ input.needs-value { border-color: var(--warning); }
 }
 .round-btn .icon { width: 32px; height: 32px; fill: currentColor; }
 
-.player-nav {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-.player-nav button { flex: 1; max-width: 214px; }
 
-/* Rest: covers the bottom of the screen like a sheet. */
-.rest-overlay {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 28px var(--gutter) calc(24px + env(safe-area-inset-bottom));
-  border-radius: 32px 32px 0 0;
-  background: var(--surface);
-  box-shadow: 0 -10px 40px rgba(40, 35, 20, 0.15);
-  animation: slide-up 0.25s ease-out;
-}
-.rest-overlay .countdown { color: var(--text); margin: 6px 0 12px; }
-.rest-overlay p { margin: 0; }
-.rest-bar { width: 100%; max-width: 360px; height: 6px; background: var(--line); border-radius: 3px; margin-bottom: 12px; }
-.rest-bar span { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 3px; }
-.rest-buttons { display: flex; gap: 12px; margin: 16px 0 12px; }
-.rest-overlay .primary-btn { width: 100%; max-width: 440px; }
-
-@keyframes slide-up { from { transform: translateY(100%); } }
 
 /* A quick flash when a timer ends. */
 body.flash::after {
@@ -389,3 +385,131 @@ body.flash::after {
   box-shadow: var(--shadow);
 }
 .stat strong { font-size: 22px; }
+
+.skipped { margin-top: 20px; font-size: 15px; }
+
+/* ---------- Home: sections ---------- */
+
+.section-title {
+  margin: 32px 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.plan-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 2px solid transparent;
+  text-align: left;
+}
+.plan-card.active { border-color: var(--accent); }
+.plan-card .eyebrow { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.plan-card .eyebrow .icon { width: 14px; height: 14px; color: var(--accent); }
+.plan-name { font-size: 18px; font-weight: 800; }
+
+.tile-grid { display: grid; gap: 10px; }
+.tile-grid.three { grid-template-columns: repeat(3, 1fr); }
+.tile-grid.two { grid-template-columns: repeat(2, 1fr); }
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 15px;
+}
+.tile-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: var(--line);
+}
+
+/* ---------- Lists on the browse screens ---------- */
+
+.row-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.list-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 10px;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  text-align: left;
+}
+.list-row > .icon { color: var(--muted); }
+.row-thumb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--line);
+}
+.row-text { flex: 1; display: flex; flex-direction: column; }
+.row-title { font-weight: 700; }
+.row-sub { font-size: 14px; color: var(--muted); }
+
+/* ---------- Player: the control dock at the bottom ---------- */
+
+.dock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+}
+.dock.with-rest {
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -10px 40px rgba(40, 35, 20, 0.12);
+  padding-top: 16px;
+}
+.controls { display: flex; align-items: center; justify-content: center; gap: 28px; }
+
+.round-btn { width: 56px; height: 56px; }
+.round-btn.big { width: 76px; height: 76px; }
+.round-btn:disabled { box-shadow: none; }
+.round-btn .icon { width: 24px; height: 24px; fill: currentColor; }
+.round-btn.big .icon { width: 30px; height: 30px; }
+/* The tick in the middle: outline only (no fill), green when you can move on. */
+.round-btn [d="M20 6 9 17l-5-5"] { fill: none; }
+.round-btn.go { background: var(--accent); color: var(--accent-text); }
+
+.rest-row {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rest-row p { margin: 0; }
+.rest-clock { font-size: 40px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--rest); }
+.rest-buttons { display: flex; gap: 6px; }
+.small-btn {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Leave room at the bottom so the dock never covers the last set. */
+#app:has(.dock) { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+#app:has(.dock.with-rest) { padding-bottom: calc(240px + env(safe-area-inset-bottom)); }

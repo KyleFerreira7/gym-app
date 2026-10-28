@@ -9,11 +9,14 @@
 
   What's in DB:
     logs             Every set you've done (the history growth/stats are built from):
-                     { id, sessionId, routineId, exerciseId, set, weightKg, reps,
+                     { id, sessionId, workoutId, exerciseId, set, weightKg, reps,
                        seconds, date: "YYYY-MM-DD", at: timestamp }
+                     Memory belongs to the EXERCISE: the leg press remembers your
+                     numbers whichever workout it's in.
     sessions         Every workout you finished:
-                     { id, routineId, date, startedAt, finishedAt, completed }
+                     { id, workoutId, date, startedAt, finishedAt, completed }
     machineSettings  Your notes per exercise, e.g. { "leg-press": "Seat 5" }
+    activePlanId     The plan whose next workout Home suggests (data/plans.js).
     current          The workout in progress (null when there isn't one).
                      Saved after every change, so a locked phone loses nothing.
 */
@@ -21,7 +24,10 @@
 const STORAGE_KEY = "gym-app";
 
 function emptyDB() {
-  return { version: 1, logs: [], sessions: [], machineSettings: {}, current: null };
+  return {
+    version: 2, logs: [], sessions: [], machineSettings: {}, current: null,
+    activePlanId: PLANS[0].id,
+  };
 }
 
 function loadDB() {
@@ -29,11 +35,29 @@ function loadDB() {
     const text = localStorage.getItem(STORAGE_KEY);
     if (!text) return emptyDB();
     // Merge with an empty DB so any field added in a later version exists.
-    return { ...emptyDB(), ...JSON.parse(text) };
+    return upgrade({ ...emptyDB(), ...JSON.parse(text) });
   } catch (error) {
     console.error("Could not read saved data", error);
     return emptyDB();
   }
+}
+
+// Bring data saved by an older version of the app up to date.
+function upgrade(db) {
+  if (db.version < 2) {
+    // Version 1 called workouts "routines".
+    const rename = (record) => {
+      if (record && record.routineId) {
+        record.workoutId = record.routineId;
+        delete record.routineId;
+      }
+    };
+    db.logs.forEach(rename);
+    db.sessions.forEach(rename);
+    rename(db.current);
+    db.version = 2;
+  }
+  return db;
 }
 
 // The one copy of the data the whole app reads and changes.
@@ -85,13 +109,18 @@ function setsThisSession(sessionId, exerciseId) {
   return DB.logs.filter((log) => log.sessionId === sessionId && log.exerciseId === exerciseId);
 }
 
-// Which routine to suggest: the one after the last completed workout (A → B → A ...).
-function nextRoutineId() {
-  const done = DB.sessions.filter((s) => s.completed);
-  if (done.length === 0) return ROUTINES[0].id;
-  const last = done[done.length - 1];
-  const index = ROUTINES.findIndex((r) => r.id === last.routineId);
-  return ROUTINES[(index + 1) % ROUTINES.length].id;
+function activePlan() {
+  return PLANS.find((p) => p.id === DB.activePlanId) || PLANS[0];
+}
+
+// Which workout to suggest: the one after the last completed workout of your
+// active plan (A → B → A ..., or Push → Pull → Legs → Push ...).
+function nextWorkoutId() {
+  const plan = activePlan();
+  const done = DB.sessions.filter((s) => s.completed && plan.workouts.includes(s.workoutId));
+  if (done.length === 0) return plan.workouts[0];
+  const index = plan.workouts.indexOf(done[done.length - 1].workoutId);
+  return plan.workouts[(index + 1) % plan.workouts.length];
 }
 
 // How many workouts were completed this week (weeks start on Monday).

@@ -13,7 +13,8 @@
   Fields:
     id         Short name with dashes. Must match the image file name.
     name       What the app shows.
-    muscles    Muscle groups worked (used later for browsing by muscle).
+    muscles    Muscles worked, MAIN one first. The first one decides where it shows
+               in "Browse by muscle" (see data/groupings.js).
     equipment  "machine", "cable", "dumbbell", "mat" or "cardio".
     type       "reps" (count sets and reps) or "timed" (a countdown).
     cue        One short line shown during the workout.

@@ -11,23 +11,32 @@ appEl.addEventListener("click", (event) => {
 
   const el = event.target.closest("[data-action]");
   if (!el || el.disabled) return;
+  const id = el.dataset.id;
 
   switch (el.dataset.action) {
-    case "home":           return renderHome();
-    case "open-routine":   return renderDetail(el.dataset.id);
-    case "start":          return startWorkout(el.dataset.id);
+    // Browsing
+    case "home":           return goHome();
+    case "back":           return goBack();
+    case "open-workout":   return goTo(renderDetail, id);
+    case "open-plan":      return goTo(renderPlan, id);
+    case "open-muscle":    return goTo(renderMuscle, id);
+    case "open-type":      return goTo(renderType, id);
+    case "follow-plan":
+      DB.activePlanId = id;
+      saveDB();
+      return goHome();
+
+    // During a workout
+    case "start":          return startWorkout(id);
     case "quit":           return quitWorkout();
     case "next":           return goToStep(+1);
     case "prev":           return goToStep(-1);
     case "toggle-set":     return toggleSet(Number(el.dataset.set));
     case "toggle-warmup":  return toggleWarmUp();
     case "toggle-timer":   return toggleTimer();
+    case "toggle-rest":    return toggleRest();
     case "rest-skip":      return endRest();
-    case "rest-adjust":
-      DB.current.rest.endsAt += Number(el.dataset.seconds) * 1000;
-      DB.current.rest.totalMs += Number(el.dataset.seconds) * 1000;
-      saveDB();
-      return tickClock();
+    case "rest-adjust":    return adjustRest(Number(el.dataset.seconds));
   }
 });
 
@@ -56,9 +65,9 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // Start: carry on with a workout in progress, otherwise show Home.
-if (DB.current && getRoutine(DB.current.routineId)) {
+if (DB.current && getWorkout(DB.current.workoutId)) {
   renderPlayer();
 } else {
   DB.current = null;
-  renderHome();
+  goHome();
 }
