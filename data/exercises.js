@@ -398,4 +398,106 @@ const EXERCISES = [
       "Going too fast.",
     ],
   },
+
+  // ---------- Swaps added 2026-10-29 ----------
+  {
+    id: "single-arm-dumbbell-row",
+    name: "Single-arm dumbbell row",
+    muscles: ["upper back", "biceps"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["seated-row"],
+    cue: "One knee and hand on the bench. Pull the dumbbell to your hip.",
+    howTo: "Put one knee and the same hand on a flat bench, the other foot on the floor. Hold a " +
+      "dumbbell with your free arm hanging straight down. Pull it up towards your hip, elbow close " +
+      "to your side, then lower slowly. Do all reps, then swap sides.",
+    tips: [
+      "Think of pulling your elbow back, not lifting your hand.",
+      "Keep your back flat, like a table top.",
+    ],
+    mistakes: [
+      "Twisting your body to swing the weight up.",
+      "Shrugging your shoulder up to your ear.",
+    ],
+  },
+  {
+    id: "lying-leg-curl",
+    name: "Lying leg curl",
+    muscles: ["hamstrings"],
+    equipment: "machine",
+    type: "reps",
+    swapFor: ["leg-curl"],
+    cue: "Hips down on the pad. Curl your heels up, lower slowly.",
+    howTo: "Lie face down with your knees just past the end of the pad and the roller above your " +
+      "heels. Hold the handles. Curl your heels towards your bottom, then lower slowly until your " +
+      "legs are nearly straight.",
+    tips: [
+      "Press your hips into the pad the whole time.",
+      "Lowering slowly works the muscle as much as lifting.",
+    ],
+    mistakes: [
+      "Hips lifting off the pad as you curl.",
+      "Letting the weight drop on the way down.",
+    ],
+  },
+  {
+    id: "dumbbell-romanian-deadlift",
+    name: "Dumbbell Romanian deadlift",
+    muscles: ["hamstrings", "glutes", "lower back"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["leg-curl"],
+    cue: "Push your hips back, dumbbells close to your legs, back flat.",
+    howTo: "Stand with a dumbbell in each hand in front of your thighs, knees slightly bent. Push " +
+      "your hips back and let the dumbbells slide down your legs until you feel a stretch in the " +
+      "back of your thighs. Squeeze your glutes to stand back up.",
+    tips: [
+      "Imagine closing a car door with your bottom.",
+      "Stop when you feel the stretch: usually around your knees or shins.",
+    ],
+    mistakes: [
+      "Rounding your back to reach lower.",
+      "Bending your knees too much, which turns it into a squat.",
+    ],
+  },
+  {
+    id: "dumbbell-shoulder-press",
+    name: "Seated dumbbell shoulder press",
+    muscles: ["shoulders", "triceps"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["shoulder-press"],
+    cue: "Back on the bench. Press up from shoulder height, lower slowly.",
+    howTo: "Sit on a bench with the back upright. Hold the dumbbells at shoulder height, palms facing " +
+      "forward. Press them up until your arms are nearly straight, then lower slowly back to " +
+      "shoulder height.",
+    tips: [
+      "Keep your stomach tight so your back stays against the bench.",
+      "Start lighter than the machine: balancing two dumbbells is harder.",
+    ],
+    mistakes: [
+      "Arching your lower back to push the weights up.",
+      "Lowering the dumbbells far below your shoulders.",
+    ],
+  },
+  {
+    id: "hip-thrust-machine",
+    name: "Hip thrust",
+    muscles: ["glutes", "hamstrings"],
+    equipment: "machine",
+    type: "reps",
+    swapFor: ["glute-bridge"],
+    cue: "Upper back on the pad. Drive your hips up, squeeze, lower.",
+    howTo: "Sit with your upper back against the pad and the hip pad across your hips. Feet flat, " +
+      "about hip-width apart. Push through your heels to lift your hips until your body is a " +
+      "straight line from knees to shoulders. Squeeze your glutes for a second, then lower.",
+    tips: [
+      "Tuck your chin slightly and look forward, not at the ceiling.",
+      "Feet placed so your shins are upright at the top.",
+    ],
+    mistakes: [
+      "Arching your lower back at the top instead of squeezing your glutes.",
+      "Pushing through your toes.",
+    ],
+  },
 ];
