@@ -28,7 +28,7 @@ const WORKOUTS = [
   {
     // Added 2026-11-12: the best of the old Workout A and B in one.
     id: "full-body-machines",
-    name: "Full body machines",
+    name: "Full body A",  // machines
     description: "Legs, chest, back and shoulders on the machines, then core. A simple, " +
       "complete workout.",
     tags: ["beginner", "machines"],
@@ -46,7 +46,7 @@ const WORKOUTS = [
   {
     // Added 2026-11-12.
     id: "full-body-free-weights",
-    name: "Full body free weights",
+    name: "Full body B",  // free weights
     description: "A full workout with dumbbells and a bench: chest, back, legs, shoulders and " +
       "core. The next step up from the machines.",
     tags: ["free-weights"],
@@ -128,7 +128,7 @@ const WORKOUTS = [
   },
   {
     id: "back-posture",
-    name: "Back and posture",
+    name: "Back",
     description: "Rows, pulldowns and the mat work that keeps you standing tall.",
     tags: ["beginner"],
     rest: 90,
@@ -145,7 +145,7 @@ const WORKOUTS = [
   // ---------- Mat only ----------
   {
     id: "core-mat",
-    name: "Core on the mat",
+    name: "Core",
     description: "A short core session you can do on any mat, no machines needed.",
     tags: ["mat"],
     rest: 60,
