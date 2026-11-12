@@ -108,61 +108,57 @@ async function accessToken() {
 
 // ---------- Signing in and out ----------
 
-// The email and password typed on the Me screen, or null (with a message) if not usable.
-function typedLogin() {
+// Sign in with what's typed in the sign-in form (on Me, or the pop-up on Home).
+// Returns null when it worked, or a message saying what went wrong.
+// (New accounts can't be made from the app: sign-ups are switched off in Supabase,
+// so the account is just mine for now. The "Create account" button was removed
+// 2026-11-12; it's in git history if sign-ups open up later.)
+async function signIn() {
   const email = fieldValue("sync-email").trim().toLowerCase();
   const password = fieldValue("sync-password");
-  if (!email.includes("@")) { renderMe("Please type your email address."); return null; }
-  if (password.length < 8) { renderMe("Your password needs at least 8 characters."); return null; }
-  return { email, password };
-}
-
-// First time only: make the account. Supabase then emails a link to confirm the address.
-async function createAccount() {
-  const login = typedLogin();
-  if (!login) return;
-  let answer;
+  if (!email.includes("@") || !password) return "Type your email and password.";
+  let session;
   try {
-    answer = await supabase("/auth/v1/signup", { method: "POST", body: login });
+    session = await supabase("/auth/v1/token?grant_type=password", { method: "POST", body: { email, password } });
   } catch (error) {
     console.error(error);
-    return renderMe(error.status === 429
-      ? "Too many tries for now. Wait a few minutes, then try again."
-      : `Couldn't create the account: ${error.message}`);
-  }
-  account = { email: login.email };
-  saveAccount();
-  // With "Confirm email" on (Supabase's default) there's no session yet, just the email.
-  if (!answer.access_token) {
-    return renderMe(`Account made. Open the email sent to ${login.email} (check spam), tap the ` +
-      "confirmation link, then come back here and sign in.");
-  }
-  await signedIn(answer);
-}
-
-async function signIn() {
-  const login = typedLogin();
-  if (!login) return;
-  try {
-    await signedIn(await supabase("/auth/v1/token?grant_type=password", { method: "POST", body: login }));
-  } catch (error) {
-    console.error(error);
-    account = { email: login.email };
+    account = { email };
     saveAccount();
-    if (/not confirmed/i.test(error.message)) {
-      return renderMe("Confirm your email first: tap the link in the email Supabase sent, then sign in.");
-    }
-    renderMe(error.status === 400 ? "Wrong email or password." : "Couldn't sign in. Check you're online and try again.");
+    return error.status === 400 ? "Wrong email or password." : "Couldn't sign in. Check you're online and try again.";
   }
-}
-
-// Supabase said yes: keep the tokens, then do the first sync.
-async function signedIn(session) {
-  account = { email: session.user?.email ?? account.email };
+  // Supabase said yes: keep the tokens, then do the first sync.
+  account = { email: session.user?.email ?? email };
   keepSession(session);
   syncStatus = "";
   await syncNow();
-  renderMe("Signed in. Your data now syncs to your account.");
+  return null;
+}
+
+// The Sign in button on Me.
+async function signInFromMe() {
+  const problem = await signIn();
+  renderMe(problem || "Signed in.");
+}
+
+// The pop-up on Home, shown each time the app opens while signed out (js/app.js).
+function showSignInSheet() {
+  openSheet("Sign in", `
+    <p class="sheet-intro">Sign in to keep your workouts safe in your account.</p>
+    ${signInForm()}
+    <button type="button" class="secondary-btn sheet-later" data-close>Not now</button>
+  `, async (picked) => {
+    if (picked.dataset.pick !== "sign-in") return true;
+    picked.disabled = true;
+    const problem = await signIn();
+    if (!problem) {
+      picked.closest(".info-sheet").remove();
+      goHome(); // redraw, in case the sync brought in new history
+      return true;
+    }
+    picked.disabled = false;
+    picked.closest(".info-panel").querySelector(".sheet-message").textContent = problem;
+    return true; // stay open to try again
+  });
 }
 
 // Forget the tokens on this device. Your data stays here and in your account.
@@ -249,44 +245,39 @@ window.addEventListener("online", () => {
 
 // ---------- The Account card on the Me screen ----------
 
-function accountCard() {
-  const synced = account.lastSyncedAt ? `Last synced ${timeAgo(account.lastSyncedAt)}` : "Not synced yet";
-
-  if (isSignedIn()) {
-    return `
-      <section class="card">
-        <p>Signed in as <strong>${esc(account.email)}</strong>. Your workouts sync to your
-        account, so a new phone can get them back.</p>
-        <p class="backup-status ${syncStatus ? "due" : ""}">${esc(syncStatus || synced)}</p>
-        <button class="primary-btn" data-action="sync-now">${icon("upload")} Sync now</button>
-        <button class="secondary-btn" data-action="sync-signout">Sign out</button>
-      </section>`;
-  }
-
-  // A <form> so password managers offer to fill in and save the password. The buttons
-  // are type="button", so they run our code instead of reloading the page.
+// The email + password form, used on Me and in the Home pop-up. A <form> so password
+// managers offer to fill it in. The button is type="button", so it runs our code
+// instead of reloading the page. In the pop-up, data-pick sends taps to its handler.
+function signInForm() {
   return `
-    <form class="card" autocomplete="on" onsubmit="return false">
-      <p>Sign in to keep a copy of your workouts in your account, so a new phone can get
-      them back.</p>
-      ${syncStatus ? `<p class="backup-status due">${esc(syncStatus)}</p>` : ""}
+    <form class="sign-in-form" autocomplete="on" onsubmit="return false">
       <input data-field="sync-email" type="email" name="email" inputmode="email"
-        autocomplete="username" placeholder="Email address" value="${esc(account.email || "")}">
+        autocomplete="username" placeholder="Email" value="${esc(account.email || "")}">
       <input data-field="sync-password" type="password" name="password"
-        autocomplete="current-password" placeholder="Password (8 or more characters)">
-      <button type="button" class="primary-btn" data-action="sync-signin">Sign in</button>
-      <button type="button" class="secondary-btn" data-action="sync-create">Create account</button>
-      <p class="row-sub">First time? Type an email and a new password, then Create account.</p>
+        autocomplete="current-password" placeholder="Password">
+      <p class="sheet-message"></p>
+      <button type="button" class="primary-btn" data-action="sync-signin" data-pick="sign-in">Sign in</button>
     </form>`;
 }
 
-function timeAgo(timestamp) {
-  const minutes = Math.floor((Date.now() - timestamp) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  return formatDate(todayISO(new Date(timestamp)));
+function accountCard() {
+  if (isSignedIn()) {
+    // Syncing happens by itself, so this is just who you are and a way out.
+    return `
+      <section class="card account-row">
+        <div>
+          <span class="eyebrow">Signed in</span>
+          <strong>${esc(account.email)}</strong>
+          ${syncStatus ? `<p class="backup-status due">${esc(syncStatus)}</p>` : ""}
+        </div>
+        <button class="small-btn" data-action="sync-signout">Sign out</button>
+      </section>`;
+  }
+  return `
+    <section class="card">
+      ${syncStatus ? `<p class="backup-status due">${esc(syncStatus)}</p>` : ""}
+      ${signInForm()}
+    </section>`;
 }
 
 // What was typed into a field on the screen (sign-in fields aren't saved as you type).

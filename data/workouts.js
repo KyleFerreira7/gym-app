@@ -8,7 +8,7 @@
   Workout fields:
     id, name, description
     tags       Used by "Browse by type" on Home (see data/groupings.js),
-               e.g. "beginner", "short", "machines", "mat".
+               e.g. "beginner", "machines", "free-weights", "mat".
     rest       Default seconds of rest after each set.
     easier     Optional: true pre-fills one weight step LESS than last time (and no
                "go up" nudge), for coming back after a break.
@@ -20,68 +20,45 @@
     reps       Target reps as [min, max], e.g. [8, 12]. Use [8, 8] for exactly 8.
     eachSide   true if the reps are per side (dead bug, bird dog).
     seconds    For timed exercises instead of sets/reps (e.g. 300 = 5 minutes).
-    warmUp     true to show a "light warm-up set" tick before the working sets.
     rest       Seconds of rest after each set (falls back to the workout's rest).
 */
 
 const WORKOUTS = [
-  // ---------- Full body A/B ----------
+  // ---------- Full body ----------
   {
-    id: "workout-a",
-    name: "Workout A",
-    description: "Legs, chest and back on the machines, then core on the mat.",
-    tags: ["beginner"],
+    // Added 2026-11-12: the best of the old Workout A and B in one.
+    id: "full-body-machines",
+    name: "Full body machines",
+    description: "Legs, chest, back and shoulders on the machines, then core. A simple, " +
+      "complete workout.",
+    tags: ["beginner", "machines"],
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "leg-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "chest-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "seated-row", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "leg-curl", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "leg-press", sets: 3, reps: [8, 12] },
+      { exercise: "chest-press", sets: 3, reps: [8, 12] },
+      { exercise: "lat-pulldown", sets: 3, reps: [8, 12] },
+      { exercise: "shoulder-press", sets: 2, reps: [8, 12] },
+      { exercise: "leg-curl", sets: 2, reps: [10, 12] },
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },
   {
-    id: "workout-b",
-    name: "Workout B",
-    description: "Back, shoulders and legs on the machines, then glutes and core on the mat.",
-    tags: ["beginner"],
+    // Added 2026-11-12.
+    id: "full-body-free-weights",
+    name: "Full body free weights",
+    description: "A full workout with dumbbells and a bench: chest, back, legs, shoulders and " +
+      "core. The next step up from the machines.",
+    tags: ["free-weights"],
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "lat-pulldown", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "shoulder-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "leg-extension", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "glute-bridge", sets: 2, reps: [12, 12] },
-      { exercise: "bird-dog", sets: 2, reps: [8, 8], eachSide: true },
-    ],
-  },
-
-  // ---------- Short versions (warm-up + the first three exercises) ----------
-  {
-    id: "lunch-a",
-    name: "Lunch A",
-    description: "The short version of Workout A: warm-up and the first three machines.",
-    tags: ["short", "machines"],
-    rest: 90,
-    steps: [
-      { exercise: "bike", seconds: 300 },
-      { exercise: "leg-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "chest-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "seated-row", sets: 3, reps: [8, 12], warmUp: true },
-    ],
-  },
-  {
-    id: "lunch-b",
-    name: "Lunch B",
-    description: "The short version of Workout B: warm-up and the first three machines.",
-    tags: ["short", "machines"],
-    rest: 90,
-    steps: [
-      { exercise: "bike", seconds: 300 },
-      { exercise: "lat-pulldown", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "shoulder-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "leg-extension", sets: 3, reps: [10, 12], warmUp: true },
+      { exercise: "dumbbell-bench-press", sets: 3, reps: [8, 12] },
+      { exercise: "single-arm-dumbbell-row", sets: 3, reps: [8, 12] },
+      { exercise: "dumbbell-romanian-deadlift", sets: 3, reps: [10, 12] },
+      { exercise: "dumbbell-hip-thrust", sets: 2, reps: [10, 12] },
+      { exercise: "lateral-raise", sets: 2, reps: [12, 15], rest: 60 },
+      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },
 
@@ -94,9 +71,9 @@ const WORKOUTS = [
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "chest-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "shoulder-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "pec-deck", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "chest-press", sets: 3, reps: [8, 12] },
+      { exercise: "shoulder-press", sets: 3, reps: [8, 12] },
+      { exercise: "pec-deck", sets: 2, reps: [10, 12] },
       { exercise: "triceps-pushdown", sets: 2, reps: [10, 12] },
       { exercise: "incline-push-up", sets: 2, reps: [8, 12] },
     ],
@@ -109,10 +86,10 @@ const WORKOUTS = [
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "lat-pulldown", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "seated-row", sets: 3, reps: [8, 12], warmUp: true },
+      { exercise: "lat-pulldown", sets: 3, reps: [8, 12] },
+      { exercise: "seated-row", sets: 3, reps: [8, 12] },
       { exercise: "single-arm-dumbbell-row", sets: 2, reps: [10, 12] },
-      { exercise: "assisted-pull-up", sets: 2, reps: [6, 10], warmUp: true },
+      { exercise: "assisted-pull-up", sets: 2, reps: [6, 10] },
       { exercise: "dumbbell-curl", sets: 2, reps: [10, 12] },
     ],
   },
@@ -124,27 +101,15 @@ const WORKOUTS = [
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "leg-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "leg-curl", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "leg-extension", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "hip-thrust-machine", sets: 3, reps: [10, 12], warmUp: true },
+      { exercise: "leg-press", sets: 3, reps: [8, 12] },
+      { exercise: "leg-curl", sets: 3, reps: [10, 12] },
+      { exercise: "leg-extension", sets: 3, reps: [10, 12] },
+      { exercise: "hip-thrust-machine", sets: 3, reps: [10, 12] },
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },
 
   // ---------- Featured on Home ----------
-  {
-    id: "quick-20",
-    name: "Quick three",
-    description: "Three big machines, two sets each, shorter rests. For a busy day.",
-    tags: ["short", "machines"],
-    rest: 60,
-    steps: [
-      { exercise: "leg-press", sets: 2, reps: [10, 12], warmUp: true },
-      { exercise: "chest-press", sets: 2, reps: [10, 12], warmUp: true },
-      { exercise: "lat-pulldown", sets: 2, reps: [10, 12], warmUp: true },
-    ],
-  },
   {
     id: "upper-body",
     name: "Upper body",
@@ -153,10 +118,10 @@ const WORKOUTS = [
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "chest-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "lat-pulldown", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "shoulder-press", sets: 2, reps: [8, 12], warmUp: true },
-      { exercise: "seated-row", sets: 2, reps: [8, 12], warmUp: true },
+      { exercise: "chest-press", sets: 3, reps: [8, 12] },
+      { exercise: "lat-pulldown", sets: 3, reps: [8, 12] },
+      { exercise: "shoulder-press", sets: 2, reps: [8, 12] },
+      { exercise: "seated-row", sets: 2, reps: [8, 12] },
       { exercise: "triceps-pushdown", sets: 2, reps: [10, 12] },
       { exercise: "dumbbell-curl", sets: 2, reps: [10, 12] },
     ],
@@ -169,58 +134,10 @@ const WORKOUTS = [
     rest: 90,
     steps: [
       { exercise: "bike", seconds: 300 },
-      { exercise: "seated-row", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "lat-pulldown", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "dumbbell-romanian-deadlift", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "seated-row", sets: 3, reps: [10, 12] },
+      { exercise: "lat-pulldown", sets: 3, reps: [10, 12] },
+      { exercise: "dumbbell-romanian-deadlift", sets: 2, reps: [10, 12] },
       { exercise: "bird-dog", sets: 2, reps: [8, 8], eachSide: true },
-      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
-    ],
-  },
-  {
-    id: "busy-gym",
-    name: "Busy gym",
-    description: "No machines needed: one bench, a pair of dumbbells and a mat. Full body, no queues.",
-    tags: ["short", "free-weights"],
-    rest: 75,
-    steps: [
-      { exercise: "incline-dumbbell-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "single-arm-dumbbell-row", sets: 3, reps: [8, 12] },
-      { exercise: "dumbbell-shoulder-press", sets: 2, reps: [8, 12], warmUp: true },
-      { exercise: "dumbbell-romanian-deadlift", sets: 2, reps: [10, 12], warmUp: true },
-      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
-    ],
-  },
-  {
-    // Added 2026-11-12, draft for review.
-    id: "full-body-free-weights",
-    name: "Full body free weights",
-    description: "A full workout with dumbbells and a bench: chest, back, legs, shoulders and " +
-      "core. The next step up from the machines.",
-    tags: ["free-weights"],
-    rest: 90,
-    steps: [
-      { exercise: "bike", seconds: 300 },
-      { exercise: "dumbbell-bench-press", sets: 3, reps: [8, 12], warmUp: true },
-      { exercise: "single-arm-dumbbell-row", sets: 3, reps: [8, 12] },
-      { exercise: "dumbbell-romanian-deadlift", sets: 3, reps: [10, 12], warmUp: true },
-      { exercise: "dumbbell-hip-thrust", sets: 2, reps: [10, 12] },
-      { exercise: "lateral-raise", sets: 2, reps: [12, 15], rest: 60 },
-      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
-    ],
-  },
-  {
-    id: "first-day-back",
-    name: "First day back",
-    description: "Been away a while? Workout A, two sets each, starting a step lighter " +
-      "than last time. Ease back in.",
-    tags: ["beginner", "short"],
-    rest: 90,
-    easier: true,
-    steps: [
-      { exercise: "bike", seconds: 300 },
-      { exercise: "leg-press", sets: 2, reps: [10, 12], warmUp: true },
-      { exercise: "chest-press", sets: 2, reps: [10, 12], warmUp: true },
-      { exercise: "seated-row", sets: 2, reps: [10, 12], warmUp: true },
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },
@@ -230,7 +147,7 @@ const WORKOUTS = [
     id: "core-mat",
     name: "Core on the mat",
     description: "A short core session you can do on any mat, no machines needed.",
-    tags: ["short", "mat"],
+    tags: ["mat"],
     rest: 60,
     steps: [
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
@@ -240,3 +157,15 @@ const WORKOUTS = [
     ],
   },
 ];
+
+// Workouts removed on 2026-11-12. Kept by name only, so older history entries still
+// show what they were (newer ones save the name with the workout).
+const RETIRED_WORKOUT_NAMES = {
+  "workout-a": "Workout A",
+  "workout-b": "Workout B",
+  "lunch-a": "Lunch A",
+  "lunch-b": "Lunch B",
+  "quick-20": "Quick three",
+  "busy-gym": "Busy gym",
+  "first-day-back": "First day back",
+};

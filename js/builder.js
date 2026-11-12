@@ -38,7 +38,7 @@ function editWorkout(workoutId) {
 // A new exercise's starting sets and reps, by equipment.
 function defaultStep(ex) {
   if (ex.equipment === "mat") return { exercise: ex.id, sets: 2, reps: [10, 12], eachSide: Boolean(ex.eachSide) };
-  return { exercise: ex.id, sets: 3, reps: [8, 12], warmUp: true };
+  return { exercise: ex.id, sets: 3, reps: [8, 12] };
 }
 
 function repsText(reps) {

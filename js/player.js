@@ -4,7 +4,6 @@
   The workout in progress lives in DB.current and is saved after every change:
     { sessionId, workoutId, startedAt,
       step,         which step of the workout is on screen (0 = first)
-      warmUps,      { stepIndex: true } for ticked warm-up sets
       drafts,       numbers typed but not ticked yet: { "step-set": { weight, reps } }
       timer,        timed exercise: { remainingMs, endsAt (null when paused), done }
       rest,         rest countdown: { endsAt (null when paused), remainingMs, totalMs,
@@ -28,7 +27,6 @@ function startWorkout(workoutId) {
     workoutId,
     startedAt: Date.now(),
     step: 0,
-    warmUps: {},
     drafts: {},
     timer: null,
     rest: null,
@@ -280,12 +278,8 @@ function setsBlock(step, ex) {
       </div>`;
   }
 
-  // Chips: warm-up, then one per set (done ✓, current ●, still to do ○).
+  // Chips: one per set (done ✓, current ●, still to do ○).
   const chips = [];
-  if (step.warmUp) {
-    chips.push(`<button class="chip-set ${cur.warmUps[cur.step] ? "done" : ""}" data-action="toggle-warmup"
-      aria-pressed="${Boolean(cur.warmUps[cur.step])}">${cur.warmUps[cur.step] ? icon("check") : ""} Warm-up</button>`);
-  }
   for (let s = 1; s <= step.sets; s++) {
     const logged = done.find((log) => log.set === s);
     if (logged) {
@@ -626,13 +620,6 @@ function cycleWeightStep(exerciseId) {
   const ex = getExercise(exerciseId);
   const index = STEP_OPTIONS.indexOf(weightStep(ex));
   DB.weightSteps[exerciseId] = STEP_OPTIONS[(index + 1) % STEP_OPTIONS.length];
-  saveDB();
-  renderPlayer(true);
-}
-
-function toggleWarmUp() {
-  const cur = DB.current;
-  cur.warmUps[cur.step] = !cur.warmUps[cur.step];
   saveDB();
   renderPlayer(true);
 }

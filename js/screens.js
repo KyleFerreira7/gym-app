@@ -112,8 +112,7 @@ function estimateMinutes(workout) {
     if (step.seconds) {
       seconds += step.seconds;
     } else {
-      const sets = step.sets + (step.warmUp ? 1 : 0);
-      seconds += sets * (40 + (step.rest ?? workout.rest));
+      seconds += step.sets * (40 + (step.rest ?? workout.rest));
     }
   }
   return Math.max(5, Math.round(seconds / 60 / 5) * 5);
@@ -226,21 +225,30 @@ function openSheet(title, bodyHtml, onPick, onClose) {
 function showInfo(exerciseId) {
   const ex = getExercise(exerciseId);
   const steps = ex.howTo.split(/(?<=\.)\s+/).filter(Boolean);
+  // The main muscle is the highlighted chip, so it needs no "Main:" label.
   const muscles = (ex.muscles || []).map((m, i) =>
-    `<span class="muscle-chip ${i === 0 ? "main" : ""}">${i === 0 ? "Main: " : ""}${esc(MUSCLE_NAMES[m] || m)}</span>`).join("");
-  const list = (items, iconName, className) => items?.length
-    ? `<ul class="info-list ${className}">${items.map((s) => `<li>${icon(iconName)}<span>${esc(s)}</span></li>`).join("")}</ul>`
-    : "";
+    `<span class="muscle-chip ${i === 0 ? "main" : ""}">${esc(MUSCLE_NAMES[m] || m)}</span>`).join("");
+  const list = (items, iconName, className) =>
+    `<ul class="info-list ${className}">${items.map((s) => `<li>${icon(iconName)}<span>${esc(s)}</span></li>`).join("")}</ul>`;
 
-  // Your best set so far, if you've done it.
+  // Your best set so far, if you've done it: a small tile.
   const history = exerciseHistory(ex.id);
   let best = "";
   if (history.length) {
     const top = history.map((h) => h.top).reduce((b, s) =>
       (s.weightKg ?? 0) > (b.weightKg ?? 0) || ((s.weightKg ?? 0) === (b.weightKg ?? 0) && s.reps > b.reps) ? s : b);
-    best = `<p class="info-best">${icon("trending-up")} Your best: <strong>${esc(setText(top))}</strong>
-      · done ${history.length}×</p>`;
+    best = `<div class="info-best">
+      <span class="eyebrow">Your best</span><strong>${esc(setText(top))}</strong>
+      <span class="row-sub">done ${history.length}×</span></div>`;
   }
+
+  // Steps / Tips / Avoid as tabs: one list at a time, so the page stays short.
+  // Tabs with nothing in them are left out.
+  const tabs = [
+    { id: "steps", name: "Steps", html: `<ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>` },
+    ex.tips?.length && { id: "tips", name: "Tips", html: list(ex.tips, "check", "tips") },
+    ex.mistakes?.length && { id: "avoid", name: "Avoid", html: list(ex.mistakes, "x", "mistakes") },
+  ].filter(Boolean);
 
   // Start and end positions: if there's an end picture (img/exercises/<id>-end.jpg),
   // the two fade into each other on a loop, like a slow video. If not, just the one.
@@ -250,13 +258,21 @@ function showInfo(exerciseId) {
       <img class="info-art end" src="img/exercises/${ex.id}-end.jpg" alt=""
         onload="this.parentElement.classList.add('moving')" onerror="this.remove()">
     </div>
-    <p class="cue">${esc(ex.cue)}</p>
-    ${best}
+    <p class="info-cue">${esc(ex.cue)}</p>
     ${muscles ? `<div class="muscle-row">${muscles}</div>` : ""}
-    <h2 class="section-title info-title">How to</h2>
-    <ol class="info-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
-    ${ex.tips?.length ? `<h2 class="section-title info-title">Tips</h2>${list(ex.tips, "check", "tips")}` : ""}
-    ${ex.mistakes?.length ? `<h2 class="section-title info-title">Common mistakes</h2>${list(ex.mistakes, "x", "mistakes")}` : ""}`);
+    ${best}
+    <div class="info-tabs" role="tablist">
+      ${tabs.map((t, i) => `<button role="tab" data-pick data-tab="${t.id}"
+        aria-selected="${i === 0}">${t.name}</button>`).join("")}
+    </div>
+    ${tabs.map((t, i) => `<div class="info-tab-panel" data-panel="${t.id}" ${i === 0 ? "" : "hidden"}>${t.html}</div>`).join("")}
+  `, (picked) => {
+    // A tab was tapped: show its panel, hide the others, keep the sheet open.
+    const sheet = picked.closest(".info-panel");
+    sheet.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", b === picked));
+    sheet.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== picked.dataset.tab; });
+    return true;
+  });
 }
 
 // Machine taken? Alternatives for the exercise on screen: its best matches first
@@ -330,7 +346,7 @@ function renderHome() {
   const nextId = nextWorkoutId();
 
   // The swipe row: Push, Pull, Legs (starting with the one that's up next), then
-  // Workout A and B, your own workouts, the featured ones (data/plans.js), then
+  // the two full body workouts, your own workouts, the featured ones (data/plans.js), then
   // "build your own".
   const start = plan.workouts.indexOf(nextId);
   const planIds = [...plan.workouts.slice(start), ...plan.workouts.slice(0, start)];

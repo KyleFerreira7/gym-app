@@ -27,11 +27,7 @@ appEl.addEventListener("click", (event) => {
     case "open-day":       return showDay(id);
     case "open-session":   return showSession(id);
     case "open-exercise-progress": return goTo(renderExerciseProgress, id);
-    case "start-fresh":    return startFresh();
-    case "delete-everything": return deleteEverything();
-    case "sync-signin":    return signIn();
-    case "sync-create":    return createAccount();
-    case "sync-now":       return syncNow();
+    case "sync-signin":    return signInFromMe();
     case "sync-signout":   return signOut();
     case "back":           return goBack();
     case "open-workout":   return goTo(renderDetail, id);
@@ -63,7 +59,6 @@ appEl.addEventListener("click", (event) => {
       // Taps and holds are handled on "pointerdown" below; this is for keyboards.
       if (event.detail === 0) adjustValue(el.dataset.field, Number(el.dataset.dir));
       return;
-    case "toggle-warmup":  return toggleWarmUp();
     case "toggle-timer":   return toggleTimer();
     case "toggle-rest":    return toggleRest();
     case "rest-skip":      return endRest();
@@ -142,4 +137,6 @@ if (DB.current && getWorkout(DB.current.workoutId)) {
 }
 
 // Signed in? Fetch what's in your account and merge it in (js/sync.js).
-syncNow();
+// Signed out? Ask to sign in, each time the app opens (not in the middle of a workout).
+if (isSignedIn()) syncNow();
+else if (!DB.current) showSignInSheet();

@@ -722,16 +722,14 @@ body.flash::after {
 .backup-status { font-weight: 700; color: var(--accent); }
 .backup-status.due { color: var(--warning); }
 .backup-message { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; }
-/* "Clean up" on Me: a quiet, folded-away line that opens on tap. */
-.cleanup { margin-top: 28px; }
-.cleanup summary {
-  cursor: pointer;
-  padding: 8px 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--muted);
-}
-.cleanup[open] summary { margin-bottom: 8px; }
+/* Account on Me, and the sign-in form (Me and the Home pop-up). */
+.account-row { flex-direction: row; align-items: center; justify-content: space-between; }
+.account-row strong { display: block; margin-top: 2px; overflow-wrap: anywhere; }
+.sign-in-form { display: flex; flex-direction: column; gap: 10px; align-self: stretch; }
+.sheet-message { margin: 0; color: var(--warning); font-size: 15px; font-weight: 600; }
+.sheet-message:empty { display: none; }
+.sheet-intro { margin: 14px 0 16px; text-align: center; color: var(--muted); }
+.sheet-later { margin-top: 10px; align-self: stretch; }
 
 /* ---------- Swap ---------- */
 
@@ -858,9 +856,47 @@ body.flash::after {
 /* ---------- Fuller exercise info ---------- */
 
 .step-row { width: 100%; text-align: left; }
-.info-title { align-self: stretch; margin: 22px 0 10px; }
-.info-best { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 15px; }
-.info-best .icon { width: 18px; height: 18px; color: var(--accent); }
+/* The cue, as the headline under the picture. */
+.info-cue { margin: 14px 0 0; text-align: center; font-size: 17px; font-weight: 600; line-height: 1.35; }
+
+/* "Your best" tile. */
+.info-best {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: var(--radius-small);
+  background: var(--accent-soft);
+}
+.info-best strong { font-size: 18px; color: var(--accent); }
+
+/* Steps / Tips / Avoid: a segmented control, one panel showing at a time. */
+.info-tabs {
+  align-self: stretch;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  margin: 22px 0 12px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--line);
+}
+.info-tabs button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.info-tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.info-tab-panel { align-self: stretch; }
+.info-tab-panel[hidden] { display: none; }
 .muscle-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 14px; }
 .muscle-chip {
   padding: 6px 12px;
@@ -886,7 +922,6 @@ body.flash::after {
 .info-list.mistakes .icon { color: var(--warning); }
 
 /* ---------- Clean up ---------- */
-.danger-outline { color: var(--warning); border-color: var(--warning); }
 .card .danger-btn { min-height: 44px; }
 .info-panel .danger-btn { margin-top: 18px; }
 

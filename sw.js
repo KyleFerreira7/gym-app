@@ -16,7 +16,7 @@
   shows up straight away on a normal reload.
 */
 
-const CACHE = "rep-v4"; // change this name to throw away all saved copies
+const CACHE = "rep-v5"; // change this name to throw away all saved copies
 const WAIT_MS = 3000;
 
 // The app's own files.

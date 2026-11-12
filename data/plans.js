@@ -15,15 +15,15 @@
 // suggests from the rotation below, then shows the workouts in HOME_ALSO.
 // The plan screens still exist in js/screens.js if the section comes back.
 const HOME_PLAN = "push-pull-legs";
-const HOME_ALSO = ["workout-a", "workout-b"];
+const HOME_ALSO = ["full-body-machines", "full-body-free-weights"];
 
 const PLANS = [
   {
     id: "full-body-ab",
-    name: "Full body A/B",
-    description: "Two full-body workouts, alternated. Every muscle twice a week if you go " +
-      "2–3 times. The best fit for starting out.",
-    workouts: ["workout-a", "workout-b"],
+    name: "Full body",
+    description: "Two full-body workouts, alternated: machines, then free weights. Every " +
+      "muscle twice a week if you go 2–3 times.",
+    workouts: ["full-body-machines", "full-body-free-weights"],
   },
   {
     id: "push-pull-legs",
@@ -42,12 +42,7 @@ const PLANS = [
 */
 
 const FEATURED = [
-  { workout: "quick-20", label: "Quick" },
   { workout: "upper-body", label: "Focus" },
   { workout: "back-posture", label: "Focus" },
-  { workout: "full-body-free-weights", label: "Free weights" },
-  { workout: "busy-gym", label: "Busy gym?" },
-  { workout: "first-day-back", label: "Been away?" },
-  { workout: "lunch-a", label: "Quick" },
   { workout: "core-mat", label: "Mat only" },
 ];
