@@ -290,10 +290,7 @@ function showSwapSheet() {
         ${ex.id === step.exercise ? icon("check") : icon("chevron-right")}
       </button>
     </li>`;
-  const describe = (ex) => {
-    const equipment = ex.equipment[0].toUpperCase() + ex.equipment.slice(1);
-    return DB.locations[ex.id] ? `${equipment} · ${DB.locations[ex.id]}` : equipment;
-  };
+  const describe = (ex) => ex.equipment[0].toUpperCase() + ex.equipment.slice(1);
   const section = (title, list) => list.length
     ? `<h2 class="section-title">${title}</h2><ul class="row-list">${list.map((ex) => row(ex, describe(ex))).join("")}</ul>`
     : "";
@@ -479,9 +476,7 @@ function renderDetail(workoutId) {
       <li>
         <button class="step-row" data-action="info" data-id="${ex.id}" aria-label="${esc(ex.name)}: how to">
           ${exerciseImage(ex.id, "step-thumb")}
-          <span class="step-name">${esc(ex.name)}
-            ${DB.locations[ex.id] ? `<span class="row-sub step-where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</span>` : ""}
-          </span>
+          <span class="step-name">${esc(ex.name)}</span>
           <span class="step-target">${targetText(step)}</span>
         </button>
       </li>`;

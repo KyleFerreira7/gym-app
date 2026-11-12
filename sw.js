@@ -16,7 +16,7 @@
   shows up straight away on a normal reload.
 */
 
-const CACHE = "rep-v3"; // change this name to throw away all saved copies
+const CACHE = "rep-v4"; // change this name to throw away all saved copies
 const WAIT_MS = 3000;
 
 // The app's own files.
@@ -38,6 +38,7 @@ const APP_FILES = [
   "js/progress.js",
   "js/builder.js",
   "js/me.js",
+  "js/sync.js",
   "js/app.js",
   "img/placeholder.svg",
   "img/icons/icon-180.png",

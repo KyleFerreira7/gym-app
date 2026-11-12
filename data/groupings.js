@@ -22,8 +22,8 @@ const MUSCLE_GROUPS = [
 
 const WORKOUT_TYPES = [
   { id: "beginner", name: "Beginner", image: "leg-press" },
-  { id: "short", name: "Short", image: "seated-row" },
   { id: "machines", name: "Machines only", image: "leg-extension" },
+  { id: "free-weights", name: "Free weights", image: "dumbbell-shoulder-press" },
   { id: "mat", name: "Mat only", image: "bird-dog" },
 ];
 

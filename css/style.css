@@ -722,23 +722,18 @@ body.flash::after {
 .backup-status { font-weight: 700; color: var(--accent); }
 .backup-status.due { color: var(--warning); }
 .backup-message { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; }
-.file-btn { cursor: pointer; }
-.file-btn input { display: none; }
-
-/* ---------- Swap and "where is it" ---------- */
-
-.where {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 4px 0 0;
+/* "Clean up" on Me: a quiet, folded-away line that opens on tap. */
+.cleanup { margin-top: 28px; }
+.cleanup summary {
+  cursor: pointer;
+  padding: 8px 0;
   font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--muted);
 }
-.where .icon, .rest-where .icon, .step-where .icon { width: 16px; height: 16px; color: var(--accent); }
-.rest-where, .step-where { display: flex; align-items: center; gap: 4px; }
-.step-where { font-weight: 400; }
+.cleanup[open] summary { margin-bottom: 8px; }
+
+/* ---------- Swap ---------- */
 
 .swap-btn {
   display: inline-flex;

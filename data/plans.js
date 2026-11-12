@@ -45,6 +45,7 @@ const FEATURED = [
   { workout: "quick-20", label: "Quick" },
   { workout: "upper-body", label: "Focus" },
   { workout: "back-posture", label: "Focus" },
+  { workout: "full-body-free-weights", label: "Free weights" },
   { workout: "busy-gym", label: "Busy gym?" },
   { workout: "first-day-back", label: "Been away?" },
   { workout: "lunch-a", label: "Quick" },

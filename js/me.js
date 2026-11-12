@@ -1,33 +1,22 @@
 /*
-  ME: a summary of your saved data, plus backup.
+  ME: a summary of your saved data, your account, and clean up.
 
-  Your data lives only in this browser on this device. "Back up my data" saves
-  all of it to a file (rep-backup-YYYY-MM-DD.json) that you keep somewhere safe
-  (iCloud Drive, email it to yourself...). "Load a backup" reads such a file back.
-  "Clean up" deletes history (Start fresh) or everything (Delete everything).
+  Your data is saved in this browser on this device, and (when signed in) in your
+  account too: see js/sync.js. "Clean up" is folded away at the bottom: it deletes
+  history (Start fresh) or everything (Delete everything).
 
-  Loading MERGES: anything in the file that isn't here yet is added, and
-  nothing already here is deleted or changed. So loading the same backup twice,
-  or an older one, is always safe.
+  Backup files were removed on 2026-11-12: the account does that job now.
+  mergeData() below is what was left of "Load a backup"; sync uses it.
 */
-
-const BACKUP_REMINDER_DAYS = 14;
 
 function renderMe(message = "") {
   const done = DB.sessions.filter((s) => s.completed);
   const sets = DB.logs.filter((log) => log.reps).length;
   const first = DB.sessions[0]?.date;
-
-  // How long since the last backup, and whether it's time for another.
-  const daysSince = DB.lastBackupAt ? Math.floor((Date.now() - DB.lastBackupAt) / 86400000) : null;
-  const due = DB.logs.length > 0 && (daysSince === null || daysSince >= BACKUP_REMINDER_DAYS);
-  let lastBackup = "Never backed up";
-  if (daysSince === 0) lastBackup = "Last backup: today";
-  else if (daysSince === 1) lastBackup = "Last backup: yesterday";
-  else if (daysSince !== null) lastBackup = `Last backup: ${daysSince} days ago`;
+  const alsoAccount = isSignedIn() ? " The copy in your account is replaced too." : "";
 
   showScreen(`
-    <header class="home-header">
+    <header class="home-header" data-screen="me">
       <div>
         <p class="eyebrow">Your data</p>
         <h1 class="big-title">Me</h1>
@@ -40,31 +29,22 @@ function renderMe(message = "") {
       <div class="stat"><span class="eyebrow">Since</span><strong>${first ? formatDate(first).slice(4) : "–"}</strong></div>
     </div>
 
-    <h2 class="section-title">Backup</h2>
-    <section class="card">
-      <p>Your workouts are saved on this device only. Back up now and then, so nothing
-      is lost if the browser's data gets cleared.</p>
-      <p class="backup-status ${due ? "due" : ""}">${lastBackup}</p>
-      ${message ? `<p class="backup-message">${esc(message)}</p>` : ""}
-      <button class="primary-btn" data-action="export">${icon("download")} Back up my data</button>
-      <label class="secondary-btn file-btn">
-        ${icon("upload")} Load a backup
-        <input type="file" accept=".json,application/json" data-field="import">
-      </label>
-      <p class="row-sub">Loading a backup only adds what's missing. It never deletes anything here.</p>
-    </section>
+    ${message ? `<p class="backup-message">${esc(message)}</p>` : ""}
 
-    <h2 class="section-title">Clean up</h2>
-    <section class="card">
-      <p>Logged something by mistake? Delete a single workout from the Progress tab
-      (tap it, then Delete).</p>
-      <button class="secondary-btn danger-outline" data-action="start-fresh" ${DB.logs.length || DB.sessions.length ? "" : "disabled"}>
-        ${icon("history")} Start fresh</button>
-      <p class="row-sub">Deletes all workouts and sets. Keeps your own workouts, machine
-      settings, weight steps and "where is it" notes.</p>
-      <button class="danger-btn" data-action="delete-everything">${icon("trash")} Delete everything</button>
-      <p class="row-sub">Wipes all app data on this device, as if it was just installed.</p>
-    </section>
+    <h2 class="section-title">Account</h2>
+    ${accountCard()}
+
+    <!-- Folded away: tap "Clean up" to open. Rarely needed, so it stays quiet. -->
+    <details class="cleanup">
+      <summary>Clean up</summary>
+      <section class="card">
+        <button class="secondary-btn danger-outline" data-action="start-fresh" ${DB.logs.length || DB.sessions.length ? "" : "disabled"}>
+          ${icon("history")} Start fresh</button>
+        <p class="row-sub">Deletes all workouts and sets. Keeps your own workouts and notes.${alsoAccount}</p>
+        <button class="danger-btn" data-action="delete-everything">${icon("trash")} Delete everything</button>
+        <p class="row-sub">Wipes all app data on this device.${alsoAccount}</p>
+      </section>
+    </details>
 
     ${tabBar("me")}
   `);
@@ -72,17 +52,11 @@ function renderMe(message = "") {
 
 // ---------- Clean up ----------
 
-// A reminder to back up first, if there's no backup from today.
-function backupWarning() {
-  const today = DB.lastBackupAt && todayISO(new Date(DB.lastBackupAt)) === todayISO();
-  return today ? "" : "\n\nYou haven't backed up today. To keep a copy, tap Cancel, then Back up my data.";
-}
-
 function startFresh() {
   const workouts = DB.sessions.length;
   const sets = DB.logs.length;
   if (!confirm(`Delete all ${workouts} workout${workouts === 1 ? "" : "s"} and ${sets} set${sets === 1 ? "" : "s"}? ` +
-    "Your own workouts, machine settings, weight steps and notes stay." + backupWarning())) return;
+    "Your own workouts, machine settings, weight steps and notes stay.")) return;
   DB.logs = [];
   DB.sessions = [];
   DB.current = null;
@@ -91,63 +65,20 @@ function startFresh() {
 }
 
 function deleteEverything() {
-  if (!confirm("Delete ALL app data on this device: history, your own workouts, settings and " +
-    "notes? This can't be undone." + backupWarning())) return;
+  if (!confirm("Delete ALL app data: history, your own workouts, settings and " +
+    "notes? This can't be undone.")) return;
   Object.assign(DB, emptyDB());
   saveDB();
   renderMe("Everything deleted. The app is like new.");
 }
 
-// ---------- Export ----------
+// ---------- Merging saved data ----------
 
-async function exportData() {
-  const backup = {
-    app: "rep",
-    exportedAt: new Date().toISOString(),
-    data: { ...DB, current: null }, // a workout in progress isn't worth saving
-  };
-  const name = `rep-backup-${todayISO()}.json`;
-  const file = new File([JSON.stringify(backup, null, 2)], name, { type: "application/json" });
-
-  try {
-    if (navigator.maxTouchPoints > 0 && navigator.canShare?.({ files: [file] })) {
-      // Phones: open the share sheet ("Save to Files", AirDrop, Mail...).
-      await navigator.share({ files: [file], title: "Rep backup" });
-    } else {
-      // Computers: a normal download to the Downloads folder.
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(file);
-      link.download = name;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    }
-  } catch (error) {
-    if (error.name === "AbortError") return renderMe("Backup cancelled.");
-    console.error(error);
-    return renderMe("Couldn't save the backup. Please try again.");
-  }
-
-  DB.lastBackupAt = Date.now();
-  saveDB();
-  renderMe(`Saved ${name}. Keep it somewhere safe, like iCloud Drive.`);
-}
-
-// ---------- Import ----------
-
-async function importData(file) {
-  let backup;
-  try {
-    backup = JSON.parse(await file.text());
-  } catch (error) {
-    return renderMe("That file isn't a backup from this app.");
-  }
-  // "gym-app" is what backups were called before the app was named Rep.
-  if (!["rep", "gym-app"].includes(backup?.app) || !Array.isArray(backup.data?.logs)) {
-    return renderMe("That file isn't a backup from this app.");
-  }
-
-  // Bring an older backup up to date, then add only what's missing.
-  const data = upgrade({ ...emptyDB(), ...backup.data });
+// Add saved data (from your account) to this device: only what's missing is
+// added, nothing here is deleted or changed. Used by js/sync.js.
+function mergeData(saved) {
+  // Bring older data up to date first.
+  const data = upgrade({ ...emptyDB(), ...saved });
   const haveLogs = new Set(DB.logs.map((log) => log.id));
   const haveSessions = new Set(DB.sessions.map((s) => s.id));
   const newLogs = data.logs.filter((log) => !haveLogs.has(log.id));
@@ -174,12 +105,5 @@ async function importData(file) {
     if (DB.weightSteps[exerciseId] == null) DB.weightSteps[exerciseId] = kg;
   }
   saveDB();
-
-  const date = backup.exportedAt ? formatDate(todayISO(new Date(backup.exportedAt))) : "an older date";
-  if (newLogs.length === 0 && newSessions.length === 0) {
-    return renderMe(`Backup from ${date} loaded: everything in it was already here.`);
-  }
-  const workouts = newSessions.filter((s) => s.completed).length;
-  renderMe(`Backup from ${date} loaded: added ${workouts} workout${workouts === 1 ? "" : "s"} and ` +
-    `${newLogs.length} set${newLogs.length === 1 ? "" : "s"}.`);
+  return { newLogs, newSessions };
 }

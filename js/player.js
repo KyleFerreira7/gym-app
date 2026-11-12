@@ -219,13 +219,12 @@ function renderPlayer(keepScroll = false) {
           ${icon("info")}</button>
       </div>
       <p class="target">${targetText(step)}</p>
-      ${DB.locations[ex.id] ? `<p class="where">${icon("map-pin")} ${esc(DB.locations[ex.id])}</p>` : ""}
       <p class="cue">${esc(ex.cue)}</p>
       ${step.seconds ? "" : `
         <button class="swap-btn" data-action="swap" aria-label="Swap this exercise">
           ${icon("swap")} ${step.swappedFrom
             ? `Swapped from ${esc(getExercise(step.swappedFrom).name)} · change`
-            : "Machine taken? Swap"}
+            : "Swap"}
         </button>`}
       ${body}
     </section>
@@ -241,15 +240,14 @@ function setsBlock(step, ex) {
   const last = lastTimeFor(ex.id, cur.sessionId);
   const done = setsThisSession(cur.sessionId, ex.id);
   const n = currentSetNumber(step);
-  const usesSettings = ex.equipment === "machine" || ex.equipment === "cable";
 
-  // "Last time (Mon 26 Oct): 40 kg × 12 · 40 kg × 11"
-  let lastLine = "First time: the weight is a light guess. Use − and + until it feels right.";
+  // "Last time (Mon 26 Oct): 40 kg × 12 · 40 kg × 11". Nothing the first time.
+  let lastLine = "";
   if (last) {
     const sets = last.sets
       .map((s) => (s.weightKg != null ? `${s.weightKg} kg × ${s.reps}` : `${s.reps} reps`))
       .join(" · ");
-    lastLine = `<strong>Last time</strong> (${formatDate(last.date)}): ${sets}`;
+    lastLine = `<p class="last-time"><strong>Last time</strong> (${formatDate(last.date)}): ${sets}</p>`;
   }
 
   // The card: the current set's steppers, or "all done".
@@ -276,8 +274,9 @@ function setsBlock(step, ex) {
         ${usesWeight(ex) ? stepper("weight", draft.weight, "kg", n) : ""}
         ${stepper("reps", draft.reps, "reps", n)}
         ${usesWeight(ex) ? `
-          <button class="step-size" data-action="cycle-step" data-exercise="${ex.id}">
-            − / + changes the weight by <strong>${weightStep(ex)} kg</strong> · change</button>` : ""}
+          <button class="step-size" data-action="cycle-step" data-exercise="${ex.id}"
+            aria-label="− / + changes the weight by ${weightStep(ex)} kg. Tap to change">
+            ± <strong>${weightStep(ex)} kg</strong></button>` : ""}
       </div>`;
   }
 
@@ -298,25 +297,12 @@ function setsBlock(step, ex) {
     }
   }
 
-  const settings = usesSettings ? `
-    <label class="field">
-      <span>Machine settings</span>
-      <input type="text" data-field="settings" data-exercise="${ex.id}"
-        value="${esc(DB.machineSettings[ex.id])}" placeholder="e.g. seat 4, back pad 2">
-    </label>` : "";
-  const where = usesWeight(ex) ? `
-    <label class="field">
-      <span>Where is it?</span>
-      <input type="text" data-field="location" data-exercise="${ex.id}"
-        value="${esc(DB.locations[ex.id])}" placeholder="e.g. back left, by the mirrors">
-    </label>` : "";
-
+  // Machine settings and "Where is it?" boxes were removed 2026-11-12 to keep this
+  // screen minimal. Notes saved before then stay in DB (machineSettings, locations).
   return `
     ${card}
     <div class="chip-row">${chips.join("")}</div>
-    <p class="last-time">${lastLine}</p>
-    ${where}
-    ${settings}`;
+    ${lastLine}`;
 }
 
 // One − [value] + row. The value is also a box you can tap to type an exact number.
@@ -374,7 +360,6 @@ function controlDock(step, isLast) {
         <p class="eyebrow">Rest${rest.endsAt ? "" : " · paused"}</p>
         <p class="rest-clock" data-countdown="rest">${formatClock(msLeft(rest) / 1000)}</p>
         <p class="row-sub">Next: ${esc(rest.nextLabel)}</p>
-        ${rest.nextWhere ? `<p class="row-sub rest-where">${icon("map-pin")} ${esc(rest.nextWhere)}</p>` : ""}
       </div>
       <div class="rest-buttons">
         <button class="small-btn" data-action="rest-adjust" data-seconds="-15">−15</button>
@@ -448,8 +433,6 @@ function startRest(step) {
     totalMs: seconds * 1000,
     advance: lastSet, // when this rest ends, move on to the next exercise
     nextLabel: lastSet ? getExercise(nextStep.exercise).name : `set ${nextSet} of ${step.sets}`,
-    // Walking to a new machine: say where it is (if you've noted it).
-    nextWhere: lastSet ? DB.locations[nextStep.exercise] || "" : "",
   };
 }
 

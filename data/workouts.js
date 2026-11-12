@@ -180,13 +180,31 @@ const WORKOUTS = [
     id: "busy-gym",
     name: "Busy gym",
     description: "No machines needed: one bench, a pair of dumbbells and a mat. Full body, no queues.",
-    tags: ["short"],
+    tags: ["short", "free-weights"],
     rest: 75,
     steps: [
       { exercise: "incline-dumbbell-press", sets: 3, reps: [8, 12], warmUp: true },
       { exercise: "single-arm-dumbbell-row", sets: 3, reps: [8, 12] },
       { exercise: "dumbbell-shoulder-press", sets: 2, reps: [8, 12], warmUp: true },
       { exercise: "dumbbell-romanian-deadlift", sets: 2, reps: [10, 12], warmUp: true },
+      { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
+    ],
+  },
+  {
+    // Added 2026-11-12, draft for review.
+    id: "full-body-free-weights",
+    name: "Full body free weights",
+    description: "A full workout with dumbbells and a bench: chest, back, legs, shoulders and " +
+      "core. The next step up from the machines.",
+    tags: ["free-weights"],
+    rest: 90,
+    steps: [
+      { exercise: "bike", seconds: 300 },
+      { exercise: "dumbbell-bench-press", sets: 3, reps: [8, 12], warmUp: true },
+      { exercise: "single-arm-dumbbell-row", sets: 3, reps: [8, 12] },
+      { exercise: "dumbbell-romanian-deadlift", sets: 3, reps: [10, 12], warmUp: true },
+      { exercise: "dumbbell-hip-thrust", sets: 2, reps: [10, 12] },
+      { exercise: "lateral-raise", sets: 2, reps: [12, 15], rest: 60 },
       { exercise: "dead-bug", sets: 2, reps: [8, 8], eachSide: true },
     ],
   },

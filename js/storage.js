@@ -21,7 +21,8 @@
     customWorkouts   Workouts I built myself, same shape as in data/workouts.js
                      (ids start with "my-").
     activePlanId     The plan whose next workout Home suggests (data/plans.js).
-    lastBackupAt     When you last saved a backup file (timestamp), for the reminder.
+    lastBackupAt     When you last saved a backup file. Unused since backup files were
+                     removed (2026-11-12); kept so older saved data still fits.
     current          The workout in progress (null when there isn't one).
                      Saved after every change, so a locked phone loses nothing.
 */
@@ -76,6 +77,8 @@ function saveDB() {
   } catch (error) {
     console.error("Could not save data", error);
   }
+  // Signed in? Upload the change to your account too (js/sync.js, loaded later).
+  if (typeof scheduleCloudSave === "function") scheduleCloudSave();
 }
 
 // ---------- Small helpers ----------

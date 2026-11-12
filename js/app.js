@@ -27,9 +27,12 @@ appEl.addEventListener("click", (event) => {
     case "open-day":       return showDay(id);
     case "open-session":   return showSession(id);
     case "open-exercise-progress": return goTo(renderExerciseProgress, id);
-    case "export":         return exportData();
     case "start-fresh":    return startFresh();
     case "delete-everything": return deleteEverything();
+    case "sync-signin":    return signIn();
+    case "sync-create":    return createAccount();
+    case "sync-now":       return syncNow();
+    case "sync-signout":   return signOut();
     case "back":           return goBack();
     case "open-workout":   return goTo(renderDetail, id);
     case "open-plan":      return goTo(renderPlan, id);
@@ -68,19 +71,15 @@ appEl.addEventListener("click", (event) => {
   }
 });
 
-// Typing: remember numbers as you type them, and save machine settings.
+// Typing: remember numbers as you type them.
 appEl.addEventListener("input", (event) => {
   const el = event.target;
   const field = el.dataset.field;
-  if (!field || field === "import") return;
+  if (!field || field.startsWith("sync-")) return;
 
-  if (field === "settings") {
-    DB.machineSettings[el.dataset.exercise] = el.value.trim();
-  } else if (field === "builder-name") {
+  if (field === "builder-name") {
     builderDraft.name = el.value;
     return; // saved with the workout, not on every key
-  } else if (field === "location") {
-    DB.locations[el.dataset.exercise] = el.value.trim();
   } else if (DB.current) {
     const key = `${DB.current.step}-${el.dataset.set}`;
     DB.current.drafts[key] = { ...DB.current.drafts[key], [field]: el.value };
@@ -116,12 +115,6 @@ appEl.addEventListener("pointerover", (event) => {
   if (point && event.pointerType === "mouse") showChartPoint(point);
 });
 
-// "Load a backup": a file was picked.
-appEl.addEventListener("change", (event) => {
-  const el = event.target;
-  if (el.dataset.field === "import" && el.files[0]) importData(el.files[0]);
-});
-
 // The clock that keeps timers moving on screen.
 setInterval(tickClock, 250);
 
@@ -147,3 +140,6 @@ if (DB.current && getWorkout(DB.current.workoutId)) {
   DB.current = null;
   goHome();
 }
+
+// Signed in? Fetch what's in your account and merge it in (js/sync.js).
+syncNow();

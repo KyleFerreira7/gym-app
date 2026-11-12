@@ -500,4 +500,127 @@ const EXERCISES = [
       "Pushing through your toes.",
     ],
   },
+
+  // ---------- Free weights added 2026-11-12 (pictures still to make) ----------
+  {
+    id: "dumbbell-bench-press",
+    name: "Dumbbell bench press",
+    muscles: ["chest", "triceps", "shoulders"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["chest-press"],
+    startKg: 6,
+    cue: "Feet flat, shoulders back. Press up over your chest, lower slowly.",
+    howTo: "Sit on the end of a flat bench with the dumbbells on your thighs. Lie back and bring them " +
+      "up beside your chest, palms facing your feet. Press them up until your arms are nearly " +
+      "straight over your chest, then lower slowly until your elbows are just below the bench.",
+    tips: [
+      "Kick the dumbbells up off your knees as you lie back: it saves your shoulders.",
+      "Squeeze your shoulder blades together, as if pinching a pencil between them.",
+    ],
+    mistakes: [
+      "Elbows flared straight out to the sides: keep them at a slight angle to your body.",
+      "Dropping the dumbbells to the floor from up high at the end. Bring them to your chest, then sit up.",
+    ],
+  },
+  {
+    id: "lateral-raise",
+    name: "Lateral raise",
+    muscles: ["shoulders"],
+    equipment: "dumbbell",
+    type: "reps",
+    startKg: 2,
+    cue: "Slight bend in the elbows. Lift out to the sides, up to shoulder height.",
+    howTo: "Stand with a light dumbbell in each hand by your sides, elbows slightly bent. Lift your " +
+      "arms out to the sides until your hands reach shoulder height, then lower slowly.",
+    tips: [
+      "Go light: even 2–4 kg is plenty for this one.",
+      "Lead with your elbows, as if pouring water out of two jugs.",
+    ],
+    mistakes: [
+      "Swinging your body to get the weights up.",
+      "Shrugging your shoulders up towards your ears.",
+    ],
+  },
+  {
+    id: "rear-delt-fly",
+    name: "Rear delt fly",
+    muscles: ["shoulders", "upper back"],
+    equipment: "dumbbell",
+    type: "reps",
+    startKg: 2,
+    cue: "Chest on the bench. Open your arms wide, squeeze your shoulder blades.",
+    howTo: "Set a bench to a low incline and lie face down on it, chest on the pad, a light dumbbell " +
+      "in each hand hanging straight down. With a slight bend in your elbows, lift your arms out to " +
+      "the sides until they're level with your body, then lower slowly.",
+    tips: [
+      "Good for posture: it works the back of your shoulders, which sitting all day neglects.",
+      "Think of spreading your arms like wings, not rowing.",
+    ],
+    mistakes: [
+      "Using weights so heavy you have to swing them.",
+      "Lifting your chest off the bench.",
+    ],
+  },
+  {
+    id: "hammer-curl",
+    name: "Hammer curl",
+    muscles: ["biceps"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["dumbbell-curl"],
+    cue: "Thumbs up, elbows by your sides. Curl up, lower slowly.",
+    howTo: "Stand with a dumbbell in each hand by your sides, palms facing in (thumbs forward). Keeping " +
+      "your elbows still at your sides, curl the dumbbells up towards your shoulders, then lower slowly.",
+    tips: [
+      "Usually a bit stronger than a normal curl, because the forearms help.",
+      "Pause for a second at the top.",
+    ],
+    mistakes: [
+      "Elbows drifting forward as you curl.",
+      "Leaning back to swing the weight up.",
+    ],
+  },
+  {
+    id: "overhead-triceps-extension",
+    name: "Overhead triceps extension",
+    muscles: ["triceps"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["triceps-pushdown"],
+    cue: "Elbows pointing up, close to your head. Lower behind, press up.",
+    howTo: "Sit on a bench with the back upright. Hold one dumbbell with both hands under the top end " +
+      "and press it straight up over your head. Bend your elbows to lower it slowly behind your " +
+      "head, then straighten your arms to press it back up.",
+    tips: [
+      "Only your forearms move: your upper arms stay pointing at the ceiling.",
+      "Sitting with your back supported keeps your lower back safe.",
+    ],
+    mistakes: [
+      "Elbows flaring out wide.",
+      "Arching your lower back as the weight goes up.",
+    ],
+  },
+  {
+    id: "dumbbell-hip-thrust",
+    name: "Dumbbell hip thrust",
+    muscles: ["glutes", "hamstrings"],
+    equipment: "dumbbell",
+    type: "reps",
+    swapFor: ["hip-thrust-machine", "glute-bridge"],
+    startKg: 10,
+    cue: "Upper back on the bench, dumbbell on your hips. Drive up, squeeze, lower.",
+    howTo: "Sit on the floor with your upper back against the side of a flat bench, knees bent and " +
+      "feet flat. Rest one dumbbell across your hips and hold it in place with both hands. Push " +
+      "through your heels to lift your hips until your body is a straight line from knees to " +
+      "shoulders. Squeeze your glutes for a second, then lower.",
+    tips: [
+      "Put a folded towel or a mat under the dumbbell: it's much more comfortable.",
+      "Keep your chin tucked and look forward, not at the ceiling.",
+    ],
+    mistakes: [
+      "Arching your lower back at the top instead of squeezing your glutes.",
+      "Feet too close or too far: your shins should be upright at the top.",
+    ],
+  },
 ];
