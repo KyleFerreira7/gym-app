@@ -501,7 +501,7 @@ const EXERCISES = [
     ],
   },
 
-  // ---------- Free weights added 2026-11-12 (pictures still to make) ----------
+  // ---------- Free weights added 2026-11-12 ----------
   {
     id: "dumbbell-bench-press",
     name: "Dumbbell bench press",
@@ -549,17 +549,18 @@ const EXERCISES = [
     equipment: "dumbbell",
     type: "reps",
     startKg: 2,
-    cue: "Chest on the bench. Open your arms wide, squeeze your shoulder blades.",
-    howTo: "Set a bench to a low incline and lie face down on it, chest on the pad, a light dumbbell " +
-      "in each hand hanging straight down. With a slight bend in your elbows, lift your arms out to " +
-      "the sides until they're level with your body, then lower slowly.",
+    cue: "Chest on the pad. Open your arms wide, squeeze your shoulder blades.",
+    howTo: "Set a bench upright and stand behind it, feet wide, leaning forward so your chest rests " +
+      "on the top of the pad. Let a light dumbbell hang straight down in each hand. With a slight " +
+      "bend in your elbows, lift your arms out to the sides until they're level with your " +
+      "shoulders, then lower slowly.",
     tips: [
       "Good for posture: it works the back of your shoulders, which sitting all day neglects.",
       "Think of spreading your arms like wings, not rowing.",
     ],
     mistakes: [
       "Using weights so heavy you have to swing them.",
-      "Lifting your chest off the bench.",
+      "Lifting your chest off the pad.",
     ],
   },
   {
